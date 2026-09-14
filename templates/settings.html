@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+    .page-container { max-width: 800px; margin: 80px auto; padding: 20px; }
+    .page-title { font-family: 'Playfair Display', serif; font-size: 3rem; color: var(--off-white); margin-bottom: 40px; }
+    
+    /* SETTINGS CARDS (No Glow) */
+    .settings-card {
+        background: #151B2B;
+        border: 1px solid rgba(63, 169, 245, 0.15);
+        border-radius: 16px;
+        padding: 40px;
+        margin-bottom: 30px;
+    }
+    .settings-card h2 { color: var(--azure-blue); margin-bottom: 20px; font-size: 1.5rem; }
+    
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; color: #8B92A8; margin-bottom: 8px; font-size: 0.9rem; }
+    .form-group input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(63, 169, 245, 0.2); background: #0B0F19; color: var(--off-white); font-family: 'Poppins', sans-serif; font-size: 1rem; transition: 0.3s; }
+    .form-group input:focus { outline: none; border-color: var(--amber-gold); }
+    
+    .save-btn { background: var(--amber-gold); color: var(--near-black); padding: 15px 30px; border: none; border-radius: 10px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: 0.3s; margin-top: 10px; }
+    .save-btn:hover { background: #FFCB5D; }
+
+    .stat-row { display: flex; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid rgba(63, 169, 245, 0.15); color: var(--off-white); }
+    .stat-row:last-child { border-bottom: none; }
+    .stat-label { color: #8B92A8; }
+    .stat-value { color: var(--amber-gold); font-weight: 700; }
+</style>
+
+<div class="page-container">
+    <h1 class="page-title">⚙️ Settings</h1>
+
+    <!-- User Stats -->
+    <div class="settings-card">
+        <h2>Your Stats</h2>
+        <div class="stat-row"><span class="stat-label">Username</span><span class="stat-value">{{ user['username'] }}</span></div>
+        <div class="stat-row"><span class="stat-label">Email</span><span class="stat-value">{{ user['email'] }}</span></div>
+        <div class="stat-row"><span class="stat-label">Total XP</span><span class="stat-value">{{ user['total_points'] }}</span></div>
+        <div class="stat-row"><span class="stat-label">Streak</span><span class="stat-value">{{ user['streak'] }} days</span></div>
+        <div class="stat-row"><span class="stat-label">Rank</span><span class="stat-value">{{ user['rank'] }}</span></div>
+        {% if user['premium'] %}
+        <div class="stat-row"><span class="stat-label">Membership</span><span class="stat-value" style="color: var(--emerald);">⭐ Premium</span></div>
+        {% else %}
+        <div class="stat-row"><span class="stat-label">Membership</span><span class="stat-value">Free</span></div>
+        {% endif %}
+    </div>
+
+    <!-- Update Profile -->
+    <div class="settings-card">
+        <h2>Update Profile</h2>
+        <form method="POST" action="{{ url_for('update_profile') }}">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" value="{{ user['username'] }}" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" value="{{ user['email'] }}" required>
+            </div>
+            <button type="submit" class="save-btn">Save Changes</button>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

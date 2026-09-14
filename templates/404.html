@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+    .error-page {
+        min-height: calc(100vh - 80px);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 40px 20px;
+        background: radial-gradient(circle at center, #151B2B 0%, #0B0F19 70%);
+        text-align: center;
+    }
+    .error-card {
+        max-width: 600px;
+    }
+    .error-code {
+        font-family: 'Playfair Display', serif;
+        font-size: 10rem;
+        font-weight: 700;
+        line-height: 1;
+        background: linear-gradient(135deg, var(--amber-gold), var(--azure-blue));
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 20px;
+        text-shadow: 0 0 60px rgba(245, 185, 66, 0.3);
+    }
+    .error-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 2.5rem;
+        color: var(--off-white);
+        margin-bottom: 20px;
+    }
+    .error-desc {
+        color: #8B92A8;
+        font-size: 1.1rem;
+        line-height: 1.6;
+        margin-bottom: 40px;
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    .error-btn {
+        display: inline-block;
+        background: var(--amber-gold);
+        color: var(--near-black);
+        padding: 16px 36px;
+        border-radius: 50px;
+        font-weight: 700;
+        font-size: 1rem;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        box-shadow: 0 0 30px rgba(245, 185, 66, 0.35);
+    }
+    .error-btn:hover {
+        background: #FFCB5D;
+        transform: translateY(-2px);
+        box-shadow: 0 0 50px rgba(245, 185, 66, 0.55);
+    }
+</style>
+
+<div class="error-page">
+    <div class="error-card">
+        <div class="error-code">404</div>
+        <h1 class="error-title">Lost in the code?</h1>
+        <p class="error-desc">The page you're looking for doesn't exist. It may have moved, or the URL might be wrong. Let's get you back on track.</p>
+        <a href="{{ url_for('landing') }}" class="error-btn">← Back to home</a>
+    </div>
+</div>
+
+{% endblock %}
+    

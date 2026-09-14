@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+    .lesson-container {
+        max-width: 800px;
+        margin: 80px auto;
+        padding: 20px;
+    }
+    .lesson-header {
+        background: #1a1d1a;
+        border: 1px solid #333;
+        border-radius: 16px;
+        padding: 30px;
+        margin-bottom: 30px;
+    }
+    .lesson-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 2.5rem;
+        color: var(--yellow);
+        margin: 0 0 10px 0;
+    }
+    .lesson-meta {
+        color: #888;
+        font-size: 0.9rem;
+    }
+    
+    /* Lesson Content */
+    .content-box {
+        background: #1a1d1a;
+        border: 1px solid #333;
+        border-radius: 16px;
+        padding: 30px;
+        margin-bottom: 30px;
+    }
+    .content-box h3 {
+        color: var(--yellow);
+        margin-top: 0;
+        margin-bottom: 15px;
+    }
+    .lesson-code {
+        background: #0F1511;
+        padding: 20px;
+        border-radius: 10px;
+        font-family: 'Courier New', monospace;
+        font-size: 1.2rem;
+        color: #7FFFD4;
+        border: 1px solid var(--emerald);
+        margin: 20px 0;
+        white-space: pre-wrap;
+    }
+    .explanation-text {
+        color: #ccc;
+        line-height: 1.8;
+    }
+    
+    /* Quiz Section */
+    .quiz-box {
+        background: #1a1d1a;
+        border: 2px solid var(--yellow);
+        border-radius: 16px;
+        padding: 30px;
+        margin-top: 40px;
+    }
+    .quiz-box h3 {
+        color: var(--yellow);
+        margin-top: 0;
+        margin-bottom: 20px;
+    }
+    .quiz-question {
+        color: var(--paper);
+        font-size: 1.2rem;
+        margin-bottom: 20px;
+    }
+    
+    .quiz-options {
+        display: grid;
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+    .option-label {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        background: #0F1511;
+        border: 1px solid #333;
+        border-radius: 12px;
+        padding: 15px 20px;
+        cursor: pointer;
+        transition: 0.3s;
+        color: #ccc;
+    }
+    .option-label:hover {
+        border-color: var(--yellow);
+        color: var(--paper);
+    }
+    .option-label input[type="radio"] {
+        accent-color: var(--yellow);
+    }
+    
+    .submit-btn {
+        background: var(--yellow);
+        color: var(--dark);
+        border: none;
+        border-radius: 10px;
+        padding: 15px 40px;
+        font-weight: 700;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+    .submit-btn:hover {
+        background: var(--beige);
+    }
+
+    @media (max-width: 600px) {
+        .lesson-title { font-size: 2rem; }
+    }
+</style>
+
+<div class="lesson-container">
+    <div class="lesson-header">
+        <h1 class="lesson-title">{{ lesson['title'] }}</h1>
+        <div class="lesson-meta">{{ lesson['level'] }} | {{ lesson['difficulty'] }} | Worth {{ lesson['points'] }} XP</div>
+    </div>
+
+    <div class="content-box">
+        <h3>📖 Learn the Concept</h3>
+        <p class="explanation-text">{{ lesson['explanation'] }}</p>
+        <div class="lesson-code">{{ lesson['content'] }}</div>
+        <p class="explanation-text">Take your time to understand the code above. Once you feel confident, answer the question below to earn your XP!</p>
+    </div>
+
+    <div class="quiz-box">
+        <h3>✅ Quiz Time!</h3>
+        <p class="quiz-question">{{ lesson['question'] }}</p>
+        
+        <form method="POST" action="{{ url_for('complete_lesson', lesson_id=lesson['id']) }}">
+            <div class="quiz-options">
+                <label class="option-label">
+                    <input type="radio" name="answer" value="A" required>
+                    A) {{ lesson['option_a'] }}
+                </label>
+                <label class="option-label">
+                    <input type="radio" name="answer" value="B" required>
+                    B) {{ lesson['option_b'] }}
+                </label>
+                <label class="option-label">
+                    <input type="radio" name="answer" value="C" required>
+                    C) {{ lesson['option_c'] }}
+                </label>
+            </div>
+            <button type="submit" class="submit-btn">Submit Answer & Earn XP</button>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

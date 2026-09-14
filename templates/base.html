@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeStreak</title>
+    <link rel="icon" href="data:," />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@300;400;600;700&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --near-black: #0B0F19;
+            --azure-blue: #3FA9F5;
+            --amber-gold: #F5B942;
+            --emerald: #2ED9A5;
+            --off-white: #E8EBF2;
+            --surface: #151B2B;
+            --surface-2: #1E2538;
+            
+            --champion-blue: #0B0F19;
+            --lavender-tonic: #3FA9F5;
+            --exotic-orange: #F5B942;
+            --dirty-white: #E8EBF2;
+            --ink: #0B0F19;
+            --paper: #E8EBF2;
+            --yellow: #F5B942;
+            --red: #3FA9F5;
+            --beige: #3FA9F5;
+            --dark: #0B0F19;
+            
+            font-family: 'Poppins', sans-serif;
+            color: var(--off-white);
+            background: var(--near-black);
+        }
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { min-height: 100%; background: var(--near-black); scroll-behavior: smooth; }
+        body { margin: 0; min-height: 100%; background: var(--near-black); overflow-x: hidden; font-family: 'Poppins', sans-serif; color: var(--off-white); }
+        
+        /* ================= NAVBAR ================= */
+        .navbar {
+            background: rgba(11, 15, 25, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid rgba(245, 185, 66, 0.12);
+        }
+        .logo-text {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 24px;
+            color: var(--off-white);
+            text-decoration: none;
+            letter-spacing: 1px;
+        }
+        .logo-text span { color: var(--amber-gold); }
+        .nav-links a {
+            color: var(--off-white);
+            text-decoration: none;
+            margin-left: 20px;
+            font-size: 16px;
+            transition: 0.3s;
+        }
+        .nav-links a:hover { color: var(--amber-gold); }
+        
+        /* ================= FLASH MESSAGES (No Glow) ================= */
+        .flash {
+            padding: 15px 25px;
+            margin: 20px auto;
+            max-width: 800px;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: 600;
+        }
+        .flash.success { background: rgba(46, 217, 165, 0.1); color: var(--emerald); border: 1px solid rgba(46, 217, 165, 0.4); }
+        .flash.danger { background: rgba(255, 80, 80, 0.1); color: #FF6B6B; border: 1px solid rgba(255, 80, 80, 0.4); }
+        .flash.info { background: rgba(63, 169, 245, 0.1); color: var(--azure-blue); border: 1px solid rgba(63, 169, 245, 0.4); }
+        
+        /* ================= BUTTONS (No Glow) ================= */
+        .btn { padding: 10px 22px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; text-decoration: none; transition: all 0.3s ease; font-family: 'Poppins', sans-serif; font-size: 0.95rem; }
+        .btn-yellow { background: var(--amber-gold); color: var(--near-black); }
+        .btn-yellow:hover { background: #FFCB5D; transform: translateY(-2px); }
+        .btn-beige { background: var(--azure-blue); color: var(--near-black); }
+        .btn-beige:hover { background: #5CBAFF; transform: translateY(-2px); }
+        .btn-emerald { background: transparent; border: 2px solid var(--azure-blue); color: var(--azure-blue); }
+        .btn-emerald:hover { background: var(--azure-blue); color: var(--near-black); }
+        
+        /* ================= CARDS (No Glow) ================= */
+        .card {
+            background: var(--surface);
+            padding: 30px;
+            border-radius: 16px;
+            margin: 20px auto;
+            max-width: 800px;
+            border: 1px solid rgba(63, 169, 245, 0.15);
+        }
+        .card h2 { color: var(--azure-blue); margin-bottom: 15px; font-family: 'Playfair Display', serif; }
+        
+        /* ================= MASCOT ================= */
+        .mascot-container { position: fixed; bottom: 20px; right: 20px; z-index: 100; display: flex; align-items: flex-end; gap: 15px; }
+        .speech-bubble {
+            background: linear-gradient(135deg, var(--azure-blue), #2E8FD5);
+            color: var(--near-black);
+            padding: 15px 20px;
+            border-radius: 20px 20px 0 20px;
+            font-size: 0.9rem;
+            max-width: 280px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            position: relative;
+            margin-bottom: 20px;
+            display: none;
+            font-weight: 500;
+        }
+        .speech-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: -15px;
+            width: 0;
+            height: 0;
+            border-left: 15px solid #2E8FD5;
+            border-top: 15px solid transparent;
+            border-bottom: 15px solid transparent;
+        }
+        .robot-mascot {
+            width: 100px;
+            height: auto;
+            animation: bounce 2s ease-in-out infinite;
+            cursor: pointer;
+            filter: drop-shadow(0 20px 25px rgba(0, 0, 0, 0.6));
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0) scale(1, 1); }
+            50% { transform: translateY(-20px) scale(0.95, 1.05); }
+        }
+        /* ================= TOAST NOTIFICATION ================= */
+        .toast-container {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            pointer-events: none;
+        }
+
+        .toast {
+            background: #151B2B;
+            border: 1px solid var(--amber-gold);
+            border-radius: 14px;
+            padding: 18px 24px;
+            min-width: 280px;
+            max-width: 360px;
+            box-shadow:
+                0 0 0 1px rgba(245, 185, 66, 0.3),
+                0 0 30px rgba(245, 185, 66, 0.25),
+                0 10px 40px rgba(0, 0, 0, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transform: translateX(500px);
+            opacity: 0;
+            transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.5s ease;
+            pointer-events: auto;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .toast-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--amber-gold), #F5893D);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.4rem;
+            flex-shrink: 0;
+            box-shadow: 0 0 20px rgba(245, 185, 66, 0.5);
+        }
+
+        .toast-content {
+            flex: 1;
+        }
+
+        .toast-title {
+            color: var(--amber-gold);
+            font-weight: 700;
+            font-size: 0.95rem;
+            margin-bottom: 3px;
+        }
+
+        .toast-message {
+            color: var(--off-white);
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+
+        .toast-close {
+            color: #8B92A8;
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 4px;
+            transition: 0.3s;
+        }
+
+        .toast-close:hover {
+            color: var(--amber-gold);
+            }
+
+        @media (max-width: 500px) {
+            .toast-container {
+            top: auto;
+            bottom: 100px;
+            right: 15px;
+            left: 15px;
+        }
+        .toast {
+            min-width: auto;
+            max-width: 100%;
+        }
+        }
+    </style>
+
+</head>
+<body>
+    <nav class="navbar">
+        <a href="{{ url_for('landing') }}" class="logo-text">Code<span>Streak</span></a>
+        <div class="nav-links">
+            {% if session['user_id'] %}
+                <a href="{{ url_for('dashboard') }}">Dashboard</a>
+                <a href="{{ url_for('lessons') }}">Lessons</a>
+                <a href="{{ url_for('leaderboard') }}">Leaderboard</a>
+                <a href="{{ url_for('achievements') }}">Achievements</a>
+                <a href="{{ url_for('profile') }}">Profile</a>
+                <a href="{{ url_for('payment') }}">Go Premium</a>
+                <a href="{{ url_for('logout') }}">Logout</a>
+            {% else %}
+                <a href="{{ url_for('login') }}">Login</a>
+                <a href="{{ url_for('register') }}">Register</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+
+    <!-- Mascot -->
+    <div class="mascot-container">
+        <div class="speech-bubble" id="speechBubble"></div>
+        <img src="{{ url_for('static', filename='mascot.png') }}" class="robot-mascot" id="robotMascot" alt="Coding Mascot">
+    </div>
+
+    <script>
+        const speechBubble = document.getElementById('speechBubble');
+        const messages = [
+            "Welcome to CodeStreak! 👋 Ready to build your streak?",
+            "Don't forget to complete your daily lesson! 🔥",
+            "Earn XP and climb to Platinum! 🚀",
+            "I'm your coding buddy! Let's learn Python together! 🐉"
+        ];
+        let messageIndex = 0;
+        
+        function typeMessage(message) {
+            speechBubble.style.display = 'block';
+            speechBubble.textContent = '';
+            let charIndex = 0;
+            const typeInterval = setInterval(() => {
+                speechBubble.textContent += message[charIndex];
+                charIndex++;
+                if (charIndex >= message.length) {
+                    clearInterval(typeInterval);
+                    setTimeout(() => { speechBubble.style.display = 'none'; }, 5000);
+                }
+            }, 40);
+        }
+        
+        setTimeout(() => typeMessage(messages[0]), 1000);
+        setInterval(() => {
+            messageIndex = (messageIndex + 1) % messages.length;
+            typeMessage(messages[messageIndex]);
+        }, 15000);
+        
+        document.getElementById('robotMascot').addEventListener('click', () => {
+            const index = Math.floor(Math.random() * messages.length);
+            typeMessage(messages[index]);
+        });
+    </script>
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+</body>
+<script>
+    // ================= TOAST NOTIFICATION SYSTEM =================
+    window.showToast = function(title, message, icon = '⚡') {
+        const container = document.getElementById('toastContainer');
+        if (!container) return;
+
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.innerHTML = `
+            <div class="toast-icon">${icon}</div>
+            <div class="toast-content">
+                <div class="toast-title">${title}</div>
+                <div class="toast-message">${message}</div>
+            </div>
+            <button class="toast-close" onclick="this.parentElement.remove()">×</button>
+        `;
+        container.appendChild(toast);
+
+        // Trigger slide-in
+        setTimeout(() => toast.classList.add('show'), 50);
+
+        // Auto-dismiss after 4 seconds
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 500);
+        }, 4000);
+    };
+
+    // Auto-trigger flash messages as toasts
+    document.addEventListener('DOMContentLoaded', () => {
+        const flashMessages = document.querySelectorAll('.flash');
+        flashMessages.forEach((flash, index) => {
+            let icon = '⚡';
+            let title = 'Notice';
+            
+            if (flash.classList.contains('success')) {
+                icon = '🎉';
+                title = 'Success!';
+            } else if (flash.classList.contains('danger')) {
+                icon = '⚠️';
+                title = 'Error';
+            } else if (flash.classList.contains('info')) {
+                icon = 'ℹ️';
+                title = 'Info';
+            }
+
+            const message = flash.textContent.trim();
+
+            // Show as toast with a small delay for stacking
+            setTimeout(() => {
+                window.showToast(title, message, icon);
+            }, index * 200);
+
+            // Hide the original flash
+            flash.style.display = 'none';
+        });
+    });
+</script>
+</html>

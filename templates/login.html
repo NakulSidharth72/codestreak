@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+    .auth-page {
+        min-height: calc(100vh - 80px);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 40px 20px;
+        background: radial-gradient(circle at center, #151B2B 0%, #0B0F19 70%);
+    }
+    .auth-card {
+        background: #151B2B;
+        border: 1px solid rgba(63, 169, 245, 0.2);
+        border-radius: 20px;
+        padding: 50px 40px;
+        max-width: 450px;
+        width: 100%;
+        box-shadow: 0 0 40px rgba(63, 169, 245, 0.1);
+    }
+    .auth-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 2.2rem;
+        color: var(--off-white);
+        margin-bottom: 10px;
+        text-align: center;
+    }
+    .auth-subtitle {
+        color: #8B92A8;
+        font-size: 0.95rem;
+        text-align: center;
+        margin-bottom: 35px;
+    }
+    .form-group { margin-bottom: 20px; }
+    .form-group label {
+        display: block;
+        color: #B8B3D1;
+        font-size: 0.9rem;
+        margin-bottom: 8px;
+    }
+    .form-group input {
+        width: 100%;
+        padding: 14px;
+        border-radius: 10px;
+        border: 1px solid rgba(63, 169, 245, 0.2);
+        background: #0B0F19;
+        color: var(--off-white);
+        font-family: 'Poppins', sans-serif;
+        font-size: 1rem;
+        transition: 0.3s;
+    }
+    .form-group input:focus {
+        outline: none;
+        border-color: var(--amber-gold);
+    }
+    .forgot-link {
+        text-align: right;
+        margin-top: -10px;
+        margin-bottom: 20px;
+    }
+    .forgot-link a {
+        color: #8B92A8;
+        font-size: 0.85rem;
+        text-decoration: none;
+        transition: 0.3s;
+    }
+    .forgot-link a:hover {
+        color: var(--amber-gold);
+    }
+    .auth-btn {
+        width: 100%;
+        padding: 15px;
+        border-radius: 10px;
+        background: var(--amber-gold);
+        color: var(--near-black);
+        border: none;
+        font-weight: 700;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+    .auth-btn:hover {
+        background: #FFCB5D;
+        transform: translateY(-2px);
+        box-shadow: 0 0 30px rgba(245, 185, 66, 0.5);
+    }
+    .auth-footer {
+        text-align: center;
+        margin-top: 25px;
+        font-size: 0.9rem;
+        color: #8B92A8;
+    }
+    .auth-footer a {
+        color: var(--amber-gold);
+        text-decoration: none;
+        font-weight: 600;
+    }
+    .auth-footer a:hover { text-decoration: underline; }
+</style>
+
+<div class="auth-page">
+    <div class="auth-card">
+        <h1 class="auth-title">Welcome Back</h1>
+        <p class="auth-subtitle">Log in to continue your streak.</p>
+
+        <form method="POST">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" placeholder="your username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="your password" required>
+            </div>
+            <div class="forgot-link">
+                <a href="{{ url_for('forgot_password') }}">Forgot password?</a>
+            </div>
+            <button type="submit" class="auth-btn">Log In →</button>
+        </form>
+
+        <div class="auth-footer">
+            Don't have an account? <a href="{{ url_for('register') }}">Register</a>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

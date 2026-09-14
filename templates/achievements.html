@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+    .page-container {
+        max-width: 1200px;
+        margin: 80px auto;
+        padding: 20px;
+    }
+    .page-header {
+        text-align: center;
+        margin-bottom: 60px;
+    }
+    .page-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 3.5rem;
+        color: var(--off-white);
+        margin-bottom: 15px;
+    }
+    .page-subtitle {
+        color: #8B92A8;
+        font-size: 1.1rem;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    .progress-summary {
+        background: #151B2B;
+        border: 1px solid rgba(245, 185, 66, 0.2);
+        border-radius: 16px;
+        padding: 30px;
+        margin-bottom: 50px;
+        text-align: center;
+        box-shadow: 0 0 0 1px rgba(245, 185, 66, 0.12), 0 0 30px rgba(245, 185, 66, 0.08);
+    }
+    .progress-summary h3 {
+        font-family: 'Playfair Display', serif;
+        font-size: 2rem;
+        color: var(--amber-gold);
+        margin-bottom: 10px;
+    }
+    .progress-summary p {
+        color: #8B92A8;
+        margin: 0;
+    }
+    .achievements-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 25px;
+    }
+    .achievement-card {
+        background: #151B2B;
+        border: 1px solid rgba(63, 169, 245, 0.15);
+        border-radius: 16px;
+        padding: 35px 25px;
+        text-align: center;
+        position: relative;
+        transition: all 0.4s ease;
+    }
+    .achievement-card.locked {
+        opacity: 0.5;
+    }
+    .achievement-card.unlocked:hover {
+        transform: translateY(-5px);
+    }
+    .achievement-icon {
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 2.2rem;
+        font-weight: 700;
+        margin: 0 auto 25px;
+        border: 2px solid;
+        background: rgba(0, 0, 0, 0.3);
+        font-family: 'Playfair Display', serif;
+    }
+    .achievement-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.5rem;
+        color: var(--off-white);
+        margin-bottom: 8px;
+    }
+    .achievement-desc {
+        color: #8B92A8;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        margin-bottom: 15px;
+    }
+    .achievement-status {
+        display: inline-block;
+        padding: 6px 16px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    .achievement-status.unlocked {
+        background: rgba(46, 217, 165, 0.15);
+        color: var(--emerald);
+        border: 1px solid rgba(46, 217, 165, 0.4);
+    }
+    .achievement-status.locked {
+        background: rgba(139, 146, 168, 0.1);
+        color: #8B92A8;
+        border: 1px solid rgba(139, 146, 168, 0.3);
+    }
+</style>
+
+<div class="page-container">
+    <div class="page-header">
+        <h1 class="page-title">🏅 Achievements</h1>
+        <p class="page-subtitle">Track your progress and unlock badges as you grow.</p>
+    </div>
+
+    <div class="progress-summary">
+        <h3>{{ achievements | selectattr('unlocked') | list | length }} / {{ achievements | length }}</h3>
+        <p>Achievements unlocked</p>
+    </div>
+
+    <div class="achievements-grid">
+        {% for ach in achievements %}
+        <div class="achievement-card {% if ach.unlocked %}unlocked{% else %}locked{% endif %}" 
+             style="border-color: {% if ach.unlocked %}rgba({{ ach.tone }}, 0.4){% else %}rgba(63, 169, 245, 0.15){% endif %};">
+            <div class="achievement-icon" 
+                 style="color: {{ ach.tone }}; border-color: {{ ach.tone }}80;">
+                {{ ach.icon }}
+            </div>
+            <h3 class="achievement-title">{{ ach.title }}</h3>
+            <p class="achievement-desc">{{ ach.description }}</p>
+            <span class="achievement-status {% if ach.unlocked %}unlocked{% else %}locked{% endif %}">
+                {% if ach.unlocked %}✓ Unlocked{% else %}🔒 Locked{% endif %}
+            </span>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}
