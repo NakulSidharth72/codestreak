@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
-import pymysql
+import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
 import razorpay
 from datetime import date
@@ -9,11 +9,8 @@ from werkzeug.utils import secure_filename
 app = Flask(__name__)
 app.secret_key = 'codestreak_super_secret_key'
 
-# MySQL Config
-app.config['MYSQL_HOST'] = 'localhost'
-app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'root'
-app.config['MYSQL_DB'] = 'codestreak'
+# SQLite Config
+DATABASE = 'codestreak.db'
 
 # ================= PROFILE PICTURE UPLOAD CONFIG =================
 UPLOAD_FOLDER = 'static/uploads'
@@ -27,13 +24,9 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def get_db():
-    return pymysql.connect(
-        host=app.config['MYSQL_HOST'],
-        user=app.config['MYSQL_USER'],
-        password=app.config['MYSQL_PASSWORD'],
-        db=app.config['MYSQL_DB'],
-        cursorclass=pymysql.cursors.DictCursor
-    )
+    conn = sqlite3.connect(DATABASE, detect_types=sqlite3.PARSE_DECLTYPES)
+    conn.row_factory = sqlite3.Row
+    return conn
 
 import json
 
@@ -43,7 +36,7 @@ def check_achievements(user_id):
     cur = conn.cursor()
     
     # Get current user state
-    cur.execute("SELECT * FROM users WHERE id = %s", (user_id,))
+    cur.execute("SELECT * FROM users WHERE id = ?", (user_id,))
     user = cur.fetchone()
     
     if not user:
@@ -52,7 +45,7 @@ def check_achievements(user_id):
         return []
     
     # Get completed lesson count
-    cur.execute("SELECT COUNT(*) as count FROM progress WHERE user_id = %s AND status = 'completed'", (user_id,))
+    cur.execute("SELECT COUNT(*) as count FROM progress WHERE user_id = ? AND status = 'completed'", (user_id,))
     completed_count = cur.fetchone()['count']
     
     # Get total lessons
@@ -84,7 +77,7 @@ def check_achievements(user_id):
     
     # Save to DB
     if newly_unlocked:
-        cur.execute("UPDATE users SET achievements = %s WHERE id = %s", 
+        cur.execute("UPDATE users SET achievements = ? WHERE id = ?", 
                     (json.dumps(unlocked), user_id))
         conn.commit()
     
@@ -99,7 +92,7 @@ def update_user_rank(user_id):
     cur = conn.cursor()
     
     # Get current total XP
-    cur.execute("SELECT total_points FROM users WHERE id = %s", (user_id,))
+    cur.execute("SELECT total_points FROM users WHERE id = ?", (user_id,))
     user = cur.fetchone()
     
     if not user:
@@ -120,7 +113,7 @@ def update_user_rank(user_id):
         new_rank = 'Bronze'
     
     # Update the rank
-    cur.execute("UPDATE users SET `rank` = %s WHERE id = %s", (new_rank, user_id))
+    cur.execute("UPDATE users SET `rank` = ? WHERE id = ?", (new_rank, user_id))
     conn.commit()
     cur.close()
     conn.close()
@@ -135,11 +128,18 @@ razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
 def update_streak(user_id):
     conn = get_db()
     cur = conn.cursor()
-    cur.execute("SELECT streak, streak_charge, created_at FROM users WHERE id = %s", (user_id,))
+    cur.execute("SELECT streak, streak_charge, created_at FROM users WHERE id = ?", (user_id,))
     user = cur.fetchone()
     
     today = date.today()
-    last_active = user['created_at'].date() if user['created_at'] else today
+    created = user['created_at']
+    if created:
+        if isinstance(created, str):
+            last_active = date.fromisoformat(created[:10])
+        else:
+            last_active = created.date() if hasattr(created, 'date') else today
+    else:
+        last_active = today
     
     if (today - last_active).days == 1:
         new_streak = user['streak'] + 1
@@ -151,7 +151,7 @@ def update_streak(user_id):
     else:
         new_streak = user['streak']
     
-    cur.execute("UPDATE users SET streak = %s, created_at = NOW() WHERE id = %s", (new_streak, user_id))
+    cur.execute("UPDATE users SET streak = ?, created_at = CURRENT_TIMESTAMP WHERE id = ?", (new_streak, user_id))
     conn.commit()
     cur.close()
     conn.close()
@@ -229,7 +229,7 @@ def register():
         cur = conn.cursor()
         try:
             cur.execute(
-                "INSERT INTO users (username, email, password_hash, security_question, security_answer) VALUES (%s, %s, %s, %s, %s)", 
+                "INSERT INTO users (username, email, password_hash, security_question, security_answer) VALUES (?, ?, ?, ?, ?)", 
                 (username, email, hashed_password, security_question, hashed_answer)
             )
             conn.commit()
@@ -251,7 +251,7 @@ def login():
         
         conn = get_db()
         cur = conn.cursor()
-        cur.execute("SELECT * FROM users WHERE username = %s", (username,))
+        cur.execute("SELECT * FROM users WHERE username = ?", (username,))
         user = cur.fetchone()
         cur.close()
         conn.close()
@@ -276,7 +276,7 @@ def dashboard():
     
     conn = get_db()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM users WHERE id = %s", (session['user_id'],))
+    cur.execute("SELECT * FROM users WHERE id = ?", (session['user_id'],))
     user = cur.fetchone()
     
     cur.execute("SELECT * FROM lessons ORDER BY order_index ASC")
@@ -307,7 +307,7 @@ def lesson(lesson_id):
     
     conn = get_db()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM lessons WHERE id = %s", (lesson_id,))
+    cur.execute("SELECT * FROM lessons WHERE id = ?", (lesson_id,))
     lesson = cur.fetchone()
     cur.close()
     conn.close()
@@ -326,7 +326,7 @@ def complete_lesson(lesson_id):
     # Get the lesson info and the user's answer
     conn = get_db()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM lessons WHERE id = %s", (lesson_id,))
+    cur.execute("SELECT * FROM lessons WHERE id = ?", (lesson_id,))
     lesson = cur.fetchone()
     
     user_answer = request.form.get('answer')  # e.g., 'B', 'C', etc.
@@ -334,10 +334,17 @@ def complete_lesson(lesson_id):
     if lesson:
         if user_answer and user_answer.upper() == lesson['correct_option']:
             xp = lesson['points']
-            cur.execute("UPDATE users SET total_points = total_points + %s, weekly_points = weekly_points + %s WHERE id = %s", 
+            cur.execute("UPDATE users SET total_points = total_points + ?, weekly_points = weekly_points + ? WHERE id = ?", 
                         (xp, xp, session['user_id']))
-            cur.execute("INSERT INTO progress (user_id, lesson_id, status, score) VALUES (%s, %s, 'completed', %s) ON DUPLICATE KEY UPDATE score = %s", 
-                        (session['user_id'], lesson_id, xp, xp))
+            cur.execute("SELECT id FROM progress WHERE user_id = ? AND lesson_id = ?", 
+                        (session['user_id'], lesson_id))
+            existing = cur.fetchone()
+            if existing:
+                cur.execute("UPDATE progress SET status = 'completed', score = ? WHERE id = ?", 
+                            (xp, existing['id']))
+            else:
+                cur.execute("INSERT INTO progress (user_id, lesson_id, status, score) VALUES (?, ?, 'completed', ?)", 
+                            (session['user_id'], lesson_id, xp))
             conn.commit()
             # After awarding XP and committing:
             update_user_rank(session['user_id'])
@@ -345,7 +352,7 @@ def complete_lesson(lesson_id):
             flash(f'🎉 Correct! You earned {xp} XP!', 'success')
             
             # Redirect to the NEXT lesson if it exists
-            next_lesson_id = lesson.get('next_lesson_id')
+            next_lesson_id = lesson['next_lesson_id']   
             if next_lesson_id is not None:
                 return redirect(url_for('lesson', lesson_id=next_lesson_id))
             else:
@@ -365,7 +372,7 @@ def settings():
     
     conn = get_db()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM users WHERE id = %s", (session['user_id'],))
+    cur.execute("SELECT * FROM users WHERE id = ?", (session['user_id'],))
     user = cur.fetchone()
     cur.close()
     conn.close()
@@ -383,14 +390,14 @@ def profile():
     
     conn = get_db()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM users WHERE id = %s", (session['user_id'],))
+    cur.execute("SELECT * FROM users WHERE id = ?", (session['user_id'],))
     user = cur.fetchone()
     
     # Count completed lessons
     cur.execute("""
         SELECT COUNT(*) as count 
         FROM progress 
-        WHERE user_id = %s AND status = 'completed'
+        WHERE user_id = ? AND status = 'completed'
     """, (session['user_id'],))
     completed_lessons = cur.fetchone()['count']
     
@@ -403,7 +410,7 @@ def profile():
         SELECT p.completed_at, l.title, p.score
         FROM progress p
         JOIN lessons l ON p.lesson_id = l.id
-        WHERE p.user_id = %s AND p.status = 'completed'
+        WHERE p.user_id = ? AND p.status = 'completed'
         ORDER BY p.completed_at DESC
         LIMIT 5
     """, (session['user_id'],))
@@ -413,11 +420,11 @@ def profile():
     cur.execute("""
         SELECT DATE(completed_at) as day
         FROM progress
-        WHERE user_id = %s AND status = 'completed'
-        AND completed_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+        WHERE user_id = ? AND status = 'completed'
+        AND completed_at >= datetime('now', '-30 days')
         GROUP BY DATE(completed_at)
     """, (session['user_id'],))
-    active_days = [row['day'].strftime('%Y-%m-%d') for row in cur.fetchall()]
+    active_days = [str(row['day'])[:10] for row in cur.fetchall()]
     
     # Build calendar data
     from datetime import date, timedelta
@@ -475,7 +482,7 @@ def update_bio():
     conn = get_db()
     cur = conn.cursor()
     cur.execute(
-        "UPDATE users SET bio = %s, learning_goal = %s WHERE id = %s",
+        "UPDATE users SET bio = ?, learning_goal = ? WHERE id = ?",
         (bio, learning_goal, session['user_id'])
     )
     conn.commit()
@@ -496,7 +503,7 @@ def update_profile():
     conn = get_db()
     cur = conn.cursor()
     try:
-        cur.execute("UPDATE users SET username = %s, email = %s WHERE id = %s", 
+        cur.execute("UPDATE users SET username = ?, email = ? WHERE id = ?", 
                     (username, email, session['user_id']))
         conn.commit()
         flash('Profile updated successfully!', 'success')
@@ -567,8 +574,8 @@ def payment_success():
         razorpay_client.utility.verify_payment_signature(params_dict)
         conn = get_db()
         cur = conn.cursor()
-        cur.execute("UPDATE users SET premium = 1 WHERE id = %s", (session['user_id'],))
-        cur.execute("INSERT INTO payments (user_id, amount, payment_status, transaction_id) VALUES (%s, 500, 'success', %s)", 
+        cur.execute("UPDATE users SET premium = 1 WHERE id = ?", (session['user_id'],))
+        cur.execute("INSERT INTO payments (user_id, amount, payment_status, transaction_id) VALUES (?, 500, 'success', ?)", 
                     (session['user_id'], razorpay_payment_id))
         conn.commit()
         cur.close()
@@ -594,7 +601,7 @@ def forgot_password():
         
         conn = get_db()
         cur = conn.cursor()
-        cur.execute("SELECT * FROM users WHERE email = %s", (email,))
+        cur.execute("SELECT * FROM users WHERE email = ?", (email,))
         user = cur.fetchone()
         cur.close()
         conn.close()
@@ -619,7 +626,7 @@ def security_question():
     
     conn = get_db()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM users WHERE email = %s", (email,))
+    cur.execute("SELECT * FROM users WHERE email = ?", (email,))
     user = cur.fetchone()
     cur.close()
     conn.close()
@@ -652,7 +659,7 @@ def reset_password():
         
         conn = get_db()
         cur = conn.cursor()
-        cur.execute("UPDATE users SET password_hash = %s WHERE email = %s", 
+        cur.execute("UPDATE users SET password_hash = ? WHERE email = ?", 
                     (hashed, session['reset_email']))
         conn.commit()
         cur.close()
@@ -678,7 +685,7 @@ def achievements():
     
     conn = get_db()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM users WHERE id = %s", (session['user_id'],))
+    cur.execute("SELECT * FROM users WHERE id = ?", (session['user_id'],))
     user = cur.fetchone()
     cur.close()
     conn.close()
@@ -766,7 +773,7 @@ def upload_profile_picture():
         # Delete old picture if it exists (with different extension)
         conn = get_db()
         cur = conn.cursor()
-        cur.execute("SELECT profile_picture FROM users WHERE id = %s", (session['user_id'],))
+        cur.execute("SELECT profile_picture FROM users WHERE id = ?", (session['user_id'],))
         old = cur.fetchone()
         
         if old and old['profile_picture']:
@@ -781,7 +788,7 @@ def upload_profile_picture():
         file.save(filepath)
         
         # Update the database
-        cur.execute("UPDATE users SET profile_picture = %s WHERE id = %s",
+        cur.execute("UPDATE users SET profile_picture = ? WHERE id = ?",
                     (filename, session['user_id']))
         conn.commit()
         cur.close()
@@ -801,7 +808,7 @@ def remove_profile_picture():
     
     conn = get_db()
     cur = conn.cursor()
-    cur.execute("SELECT profile_picture FROM users WHERE id = %s", (session['user_id'],))
+    cur.execute("SELECT profile_picture FROM users WHERE id = ?", (session['user_id'],))
     user = cur.fetchone()
     
     if user and user['profile_picture']:
@@ -812,7 +819,7 @@ def remove_profile_picture():
             except:
                 pass
         
-        cur.execute("UPDATE users SET profile_picture = NULL WHERE id = %s", (session['user_id'],))
+        cur.execute("UPDATE users SET profile_picture = NULL WHERE id = ?", (session['user_id'],))
         conn.commit()
         flash('Profile picture removed.', 'info')
     
@@ -831,5 +838,6 @@ def internal_server_error(e):
     return render_template('500.html'), 500
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
     
