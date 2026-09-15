@@ -546,15 +546,16 @@ def payment():
         return redirect(url_for('login'))
     
     if request.method == 'POST':
-        amount = 500
-        currency = 'INR'
-        order_data = razorpay_client.order.create({
-            'amount': amount,
-            'currency': currency,
-            'receipt': 'order_rcptid_' + str(session['user_id'])
-        })
-        session['razorpay_order_id'] = order_data['id']
-        return render_template('pay.html', order_id=order_data['id'], key_id=RAZORPAY_KEY_ID, amount=amount, currency=currency)
+        # DEMO MODE: Simulate a successful payment without Razorpay
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("UPDATE users SET premium = 1 WHERE id = ?", (session['user_id'],))
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        flash('💎 Welcome to Premium! Enjoy advanced features.', 'success')
+        return redirect(url_for('dashboard'))
     
     return render_template('payment.html')
 
