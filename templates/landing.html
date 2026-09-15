@@ -604,6 +604,161 @@
         opacity: 1 !important;
         transform: translateY(0) !important;
     }
+    /* ================= MEET THE TEAM ================= */
+.team-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 30px;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.team-card {
+    perspective: 1200px;
+    opacity: 0;
+    transform: translateY(50px);
+    transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+    cursor: pointer;
+    height: 340px;
+}
+
+/* Stagger effect when section becomes visible */
+.fade-in-section.visible .team-grid .team-card {
+    opacity: 1;
+    transform: translateY(0);
+}
+.fade-in-section.visible .team-grid .team-card:nth-child(1) { transition-delay: 0s; }
+.fade-in-section.visible .team-grid .team-card:nth-child(2) { transition-delay: 0.15s; }
+.fade-in-section.visible .team-grid .team-card:nth-child(3) { transition-delay: 0.3s; }
+
+/* Tilt wrapper */
+.team-tilt {
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transition: transform 0.3s ease-out;
+    transform: 
+        rotateX(calc(var(--ty, 0) * 1deg)) 
+        rotateY(calc(var(--tx, 0) * 1deg));
+}
+
+/* Flip wrapper */
+.team-flip {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.team-card.flipped .team-flip {
+    transform: rotateY(180deg);
+}
+
+/* Front + Back faces */
+.team-front,
+.team-back {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    background: #151B2B;
+    border: 1px solid rgba(63, 169, 245, 0.15);
+    border-radius: 20px;
+    padding: 40px 25px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    box-shadow:
+        0 0 0 1px rgba(245, 185, 66, 0.1),
+        0 0 25px rgba(245, 185, 66, 0.05);
+    transition: box-shadow 0.4s ease, border-color 0.4s ease;
+}
+
+.team-card:hover .team-front,
+.team-card:hover .team-back {
+    border-color: rgba(245, 185, 66, 0.5);
+    box-shadow:
+        0 0 0 1px rgba(245, 185, 66, 0.3),
+        0 0 35px rgba(245, 185, 66, 0.15),
+        0 0 80px rgba(245, 185, 66, 0.08);
+}
+
+/* Back face (flipped) */
+.team-back {
+    transform: rotateY(180deg);
+    padding: 30px 25px;
+}
+
+/* Avatar */
+.team-avatar {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--amber-gold), #F5893D);
+    color: var(--near-black);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    font-size: 2.2rem;
+    margin-bottom: 20px;
+    box-shadow: 0 0 25px rgba(245, 185, 66, 0.4);
+    border: 2px solid rgba(245, 185, 66, 0.5);
+}
+
+/* Text */
+.team-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    color: var(--off-white);
+    margin-bottom: 8px;
+}
+.team-role {
+    color: var(--azure-blue);
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-bottom: 20px;
+}
+.team-hint {
+    color: #5A6078;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-top: 15px;
+}
+
+/* Back face content */
+.team-bio {
+    color: #B8B3D1;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin-bottom: 25px;
+}
+.team-skills {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+.team-skills span {
+    padding: 6px 14px;
+    border-radius: 20px;
+    background: rgba(63, 169, 245, 0.1);
+    border: 1px solid rgba(63, 169, 245, 0.3);
+    color: var(--azure-blue);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+@media (max-width: 700px) {
+    .team-card { height: 320px; }
+    .team-avatar { width: 70px; height: 70px; font-size: 1.8rem; }
+}
 </style>
 
 <!-- HERO -->
@@ -790,6 +945,81 @@
     </div>
 </div>
 
+<!-- MEET THE TEAM -->
+<div class="section-padding fade-in-section">
+    <p class="section-kicker">MEET THE TEAM</p>
+    <h2 class="big-heading">The people behind <span class="yellow">CodeStreak.</span></h2>
+    <p class="body-text" style="margin: 0 auto 60px;">Three developers, one mission — make learning to code a daily habit.</p>
+
+    <div class="team-grid">
+        <!-- Card 1 -->
+        <div class="team-card">
+            <div class="team-tilt">
+                <div class="team-flip">
+                    <div class="team-front">
+                        <div class="team-avatar">N</div>
+                        <h3 class="team-name">Nakul Sidarth</h3>
+                        <p class="team-role">Frontend Developer & Overall</p>
+                        <span class="team-hint">Click to see bio</span>
+                    </div>
+                    <div class="team-back">
+                        <h3 class="team-name">Nakul Sidarth</h3>
+                        <p class="team-bio">Designed the visual identity, built the parallax landing page, and crafted every animation you see.</p>
+                        <div class="team-skills">
+                            <span>Flask</span>
+                            <span>UI/UX</span>
+                            <span>Animations</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="team-card">
+            <div class="team-tilt">
+                <div class="team-flip">
+                    <div class="team-front">
+                        <div class="team-avatar">H</div>
+                        <h3 class="team-name">Harish Karthik</h3>
+                        <p class="team-role">Project Coordinator & QA</p>
+                        <span class="team-hint">Click to see bio</span>
+                    </div>
+                    <div class="team-back">
+                        <h3 class="team-name">Harish Karthik</h3>
+                        <p class="team-bio">Managed timelines, coordinated tasks, and ran thorough testing across every page and flow.</p>
+                        <div class="team-skills">
+                            <span>Testing</span>
+                            <span>QA</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="team-card">
+            <div class="team-tilt">
+                <div class="team-flip">
+                    <div class="team-front">
+                        <div class="team-avatar">S</div>
+                        <h3 class="team-name">Srivatsa</h3>
+                        <p class="team-role">Backend Developer</p>
+                        <span class="team-hint">Click to see bio</span>
+                    </div>
+                    <div class="team-back">
+                        <h3 class="team-name">Srivatsa</h3>
+                        <p class="team-bio">Structured the database schema, designed the tables and relationships, and handled all data persistence logic.</p>
+                        <div class="team-skills">
+                            <span>Databases</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- FINAL CTA -->
 <div class="final-cta-wrap fade-in-section">
     <div class="final-cta">
@@ -805,6 +1035,39 @@
 
 <!-- ================= LANDING PAGE SCRIPTS ================= -->
 <script>
+// ================= TEAM CARD TILT + FLIP =================
+document.addEventListener('DOMContentLoaded', function() {
+    const teamCards = document.querySelectorAll('.team-card');
+
+    teamCards.forEach(function(card) {
+        // ---- 3D Tilt on Mouse Move ----
+        card.addEventListener('mousemove', function(e) {
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const cx = rect.width / 2;
+            const cy = rect.height / 2;
+
+            // Max tilt: 8 degrees
+            const tiltX = ((y - cy) / cy) * -8;
+            const tiltY = ((x - cx) / cx) * 8;
+
+            card.querySelector('.team-tilt').style.setProperty('--tx', tiltY);
+            card.querySelector('.team-tilt').style.setProperty('--ty', tiltX);
+        });
+
+        // ---- Reset Tilt on Mouse Leave ----
+        card.addEventListener('mouseleave', function() {
+            card.querySelector('.team-tilt').style.setProperty('--tx', 0);
+            card.querySelector('.team-tilt').style.setProperty('--ty', 0);
+        });
+
+        // ---- Click to Flip ----
+        card.addEventListener('click', function() {
+            card.classList.toggle('flipped');
+        });
+    });
+});
 // ================= HERO PARALLAX SCROLL =================
 (function() {
     const hero = document.getElementById('parallaxHero');
