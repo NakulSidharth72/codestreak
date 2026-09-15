@@ -546,7 +546,8 @@ def payment():
         return redirect(url_for('login'))
     
     if request.method == 'POST':
-        # DEMO MODE: Simulate a successful payment without Razorpay
+        # DEMO MODE: Simulate a successful payment
+        # (No real Razorpay API call — just a UI experience)
         conn = get_db()
         cur = conn.cursor()
         cur.execute("UPDATE users SET premium = 1 WHERE id = ?", (session['user_id'],))
@@ -554,7 +555,7 @@ def payment():
         cur.close()
         conn.close()
         
-        flash('💎 Welcome to Premium! Enjoy advanced features.', 'success')
+        flash('💎 Payment successful! Welcome to Premium.', 'success')
         return redirect(url_for('dashboard'))
     
     return render_template('payment.html')

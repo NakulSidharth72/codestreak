@@ -1,11 +1,336 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="card" style="max-width: 500px; text-align: center;">
-    <h2>Go Premium 🚀</h2>
-    <p style="margin: 20px 0;">Unlock exclusive lessons, remove ads, and support CodeStreak!</p>
-    <h3 style="color: var(--yellow); font-size: 2rem;">₹5.00 / month</h3>
-    <form method="POST" style="margin-top: 20px;">
-        <button type="submit" class="btn btn-yellow" style="font-size: 1.2rem;">Upgrade Now</button>
-    </form>
+
+<style>
+    .checkout-container {
+        max-width: 1000px;
+        margin: 60px auto;
+        padding: 20px;
+        display: grid;
+        grid-template-columns: 1fr 1.2fr;
+        gap: 40px;
+    }
+
+    /* ============ LEFT: Order Summary ============ */
+    .order-summary {
+        background: #151B2B;
+        border: 1px solid rgba(245, 185, 66, 0.25);
+        border-radius: 20px;
+        padding: 35px;
+        height: fit-content;
+        box-shadow: 0 0 0 1px rgba(245, 185, 66, 0.1), 0 0 40px rgba(245, 185, 66, 0.08);
+        position: sticky;
+        top: 100px;
+    }
+    .order-summary h2 {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.6rem;
+        color: var(--off-white);
+        margin-bottom: 25px;
+    }
+    .order-line {
+        display: flex;
+        justify-content: space-between;
+        padding: 15px 0;
+        border-bottom: 1px solid rgba(63, 169, 245, 0.1);
+        color: #B8B3D1;
+        font-size: 0.95rem;
+    }
+    .order-line:last-of-type { border-bottom: none; }
+    .order-line strong { color: var(--off-white); font-weight: 600; }
+    .order-line.total {
+        font-size: 1.15rem;
+        color: var(--amber-gold);
+        padding-top: 20px;
+        margin-top: 10px;
+        border-top: 2px solid rgba(245, 185, 66, 0.3);
+    }
+    .order-line.total strong {
+        color: var(--amber-gold);
+        font-size: 1.5rem;
+        font-family: 'Playfair Display', serif;
+    }
+    .premium-badge {
+        display: inline-block;
+        padding: 6px 14px;
+        border-radius: 20px;
+        background: linear-gradient(135deg, var(--amber-gold), #F5893D);
+        color: var(--near-black);
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 20px;
+    }
+    .order-features {
+        list-style: none;
+        padding: 0;
+        margin: 20px 0;
+    }
+    .order-features li {
+        color: #B8B3D1;
+        font-size: 0.9rem;
+        padding: 8px 0 8px 25px;
+        position: relative;
+    }
+    .order-features li::before {
+        content: '✓';
+        color: var(--emerald);
+        position: absolute;
+        left: 0;
+        font-weight: 700;
+    }
+
+    /* ============ RIGHT: Payment Form ============ */
+    .payment-form {
+        background: #151B2B;
+        border: 1px solid rgba(63, 169, 245, 0.15);
+        border-radius: 20px;
+        padding: 35px;
+    }
+    .payment-form h2 {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.6rem;
+        color: var(--off-white);
+        margin-bottom: 25px;
+    }
+
+    .payment-methods {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 30px;
+    }
+    .method-tab {
+        flex: 1;
+        padding: 14px;
+        border-radius: 12px;
+        background: #0B0F19;
+        border: 1px solid rgba(63, 169, 245, 0.2);
+        color: #B8B3D1;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.3s;
+        text-align: center;
+    }
+    .method-tab.active {
+        background: rgba(245, 185, 66, 0.1);
+        border-color: var(--amber-gold);
+        color: var(--amber-gold);
+    }
+    .method-tab:hover {
+        border-color: rgba(245, 185, 66, 0.5);
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+    .form-group label {
+        display: block;
+        color: #B8B3D1;
+        font-size: 0.85rem;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 600;
+    }
+    .form-group input {
+        width: 100%;
+        padding: 14px 16px;
+        border-radius: 10px;
+        border: 1px solid rgba(63, 169, 245, 0.2);
+        background: #0B0F19;
+        color: var(--off-white);
+        font-family: 'Poppins', sans-serif;
+        font-size: 1rem;
+        transition: 0.3s;
+        box-sizing: border-box;
+    }
+    .form-group input:focus {
+        outline: none;
+        border-color: var(--amber-gold);
+        box-shadow: 0 0 0 3px rgba(245, 185, 66, 0.15);
+    }
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+    }
+
+    .pay-btn {
+        width: 100%;
+        padding: 18px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, var(--amber-gold), #F5893D);
+        color: var(--near-black);
+        border: none;
+        font-family: 'Poppins', sans-serif;
+        font-weight: 700;
+        font-size: 1.05rem;
+        cursor: pointer;
+        transition: 0.3s;
+        box-shadow: 0 0 30px rgba(245, 185, 66, 0.4);
+        margin-top: 15px;
+    }
+    .pay-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0 50px rgba(245, 185, 66, 0.6);
+    }
+
+    .secure-note {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        color: #8B92A8;
+        font-size: 0.8rem;
+        margin-top: 20px;
+    }
+
+    /* ============ PROCESSING OVERLAY ============ */
+    .processing-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(11, 15, 25, 0.95);
+        backdrop-filter: blur(10px);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        z-index: 9999;
+    }
+    .processing-overlay.active {
+        display: flex;
+    }
+    .spinner {
+        width: 70px;
+        height: 70px;
+        border: 4px solid rgba(245, 185, 66, 0.2);
+        border-top-color: var(--amber-gold);
+        border-radius: 50%;
+        animation: spin 0.9s linear infinite;
+        margin-bottom: 30px;
+    }
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    .processing-text {
+        color: var(--off-white);
+        font-family: 'Playfair Display', serif;
+        font-size: 1.5rem;
+        margin-bottom: 10px;
+    }
+    .processing-sub {
+        color: #8B92A8;
+        font-size: 0.9rem;
+    }
+
+    @media (max-width: 800px) {
+        .checkout-container {
+            grid-template-columns: 1fr;
+        }
+        .order-summary {
+            position: static;
+        }
+    }
+</style>
+
+<!-- PROCESSING OVERLAY -->
+<div class="processing-overlay" id="processingOverlay">
+    <div class="spinner"></div>
+    <p class="processing-text">Processing payment...</p>
+    <p class="processing-sub">Please wait, do not close this window</p>
 </div>
+
+<div class="checkout-container">
+    <!-- LEFT: Order Summary -->
+    <div class="order-summary">
+        <span class="premium-badge">⭐ Premium Plan</span>
+        <h2>Order Summary</h2>
+        
+        <div class="order-line">
+            <span>CodeStreak Premium</span>
+            <strong>₹5.00</strong>
+        </div>
+        <div class="order-line">
+            <span>Duration</span>
+            <strong>Monthly</strong>
+        </div>
+        <div class="order-line">
+            <span>Tax (GST)</span>
+            <strong>₹0.00</strong>
+        </div>
+        <div class="order-line total">
+            <span>Total</span>
+            <strong>₹5.00</strong>
+        </div>
+
+        <ul class="order-features">
+            <li>Unlimited lessons</li>
+            <li>Advanced challenge packs</li>
+            <li>Progress insights</li>
+            <li>Priority leaderboard rank</li>
+        </ul>
+    </div>
+
+    <!-- RIGHT: Payment Form -->
+    <div class="payment-form">
+        <h2>Payment Details</h2>
+
+        <form method="POST" id="paymentForm" onsubmit="showProcessing(event)">
+            
+            <!-- Method Tabs -->
+            <div class="payment-methods">
+                <div class="method-tab active" data-method="card" onclick="selectMethod(this)">💳 Card</div>
+                <div class="method-tab" data-method="upi" onclick="selectMethod(this)">📱 UPI</div>
+                <div class="method-tab" data-method="netbanking" onclick="selectMethod(this)">🏦 NetBanking</div>
+            </div>
+
+            <!-- Card Details -->
+            <div class="form-group">
+                <label>Card Number</label>
+                <input type="text" placeholder="1234 5678 9012 3456" maxlength="19" required>
+            </div>
+
+            <div class="form-group">
+                <label>Cardholder Name</label>
+                <input type="text" placeholder="Name on card" required>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Expiry</label>
+                    <input type="text" placeholder="MM/YY" maxlength="5" required>
+                </div>
+                <div class="form-group">
+                    <label>CVV</label>
+                    <input type="password" placeholder="•••" maxlength="3" required>
+                </div>
+            </div>
+
+            <button type="submit" class="pay-btn">Pay ₹5.00 →</button>
+
+            <div class="secure-note">
+                🔒 Secured with 256-bit SSL encryption
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function selectMethod(el) {
+        document.querySelectorAll('.method-tab').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+    }
+
+    function showProcessing(event) {
+        // Don't block the form — let it submit
+        // Just show the overlay for 2 seconds while the form submits in the background
+        document.getElementById('processingOverlay').classList.add('active');
+        
+        // Let the form submit normally
+        // No event.preventDefault() — this lets Flask process it
+    }
+</script>
+
 {% endblock %}
