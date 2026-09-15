@@ -122,6 +122,10 @@
         border-color: rgba(245, 185, 66, 0.5);
     }
 
+    /* ============ METHOD CONTENT PANELS ============ */
+    .method-panel { display: none; }
+    .method-panel.active { display: block; }
+
     .form-group {
         margin-bottom: 20px;
     }
@@ -187,6 +191,100 @@
         margin-top: 20px;
     }
 
+    /* ============ UPI QR ============ */
+    .upi-qr-box {
+        text-align: center;
+        padding: 30px 20px;
+        background: #0B0F19;
+        border-radius: 16px;
+        border: 1px solid rgba(63, 169, 245, 0.15);
+        margin-bottom: 20px;
+    }
+    .qr-image {
+        width: 220px;
+        height: 220px;
+        background: white;
+        padding: 12px;
+        border-radius: 12px;
+        margin: 0 auto 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .qr-image svg {
+        width: 100%;
+        height: 100%;
+    }
+    .upi-id {
+        color: var(--amber-gold);
+        font-weight: 700;
+        font-size: 1rem;
+        margin-bottom: 6px;
+    }
+    .upi-hint {
+        color: #8B92A8;
+        font-size: 0.85rem;
+    }
+    .scan-btn {
+        margin-top: 20px;
+    }
+
+    /* ============ SLIDESHOW OVERLAY ============ */
+    .slideshow-overlay {
+        position: fixed;
+        inset: 0;
+        background: #000;
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 99999;
+    }
+    .slideshow-overlay.active {
+        display: flex;
+    }
+    .slide-img {
+        max-width: 90vw;
+        max-height: 90vh;
+        object-fit: contain;
+        animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes popIn {
+        0% { transform: scale(0.8); opacity: 0; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+    .slide-counter {
+        position: absolute;
+        top: 30px;
+        right: 30px;
+        color: #fff;
+        font-size: 1.2rem;
+        font-weight: 700;
+        background: rgba(0,0,0,0.6);
+        padding: 8px 18px;
+        border-radius: 30px;
+        border: 1px solid rgba(255,255,255,0.2);
+    }
+    .slide-skip {
+        position: absolute;
+        bottom: 30px;
+        right: 30px;
+        color: #fff;
+        background: var(--amber-gold);
+        padding: 12px 24px;
+        border-radius: 30px;
+        border: none;
+        font-weight: 700;
+        font-size: 0.95rem;
+        cursor: pointer;
+        box-shadow: 0 0 30px rgba(245, 185, 66, 0.5);
+        transition: 0.3s;
+        z-index: 2;
+    }
+    .slide-skip:hover {
+        background: #FFCB5D;
+        transform: translateY(-2px);
+    }
+
     /* ============ PROCESSING OVERLAY ============ */
     .processing-overlay {
         position: fixed;
@@ -199,9 +297,7 @@
         flex-direction: column;
         z-index: 9999;
     }
-    .processing-overlay.active {
-        display: flex;
-    }
+    .processing-overlay.active { display: flex; }
     .spinner {
         width: 70px;
         height: 70px;
@@ -211,9 +307,7 @@
         animation: spin 0.9s linear infinite;
         margin-bottom: 30px;
     }
-    @keyframes spin {
-        to { transform: rotate(360deg); }
-    }
+    @keyframes spin { to { transform: rotate(360deg); } }
     .processing-text {
         color: var(--off-white);
         font-family: 'Playfair Display', serif;
@@ -226,12 +320,8 @@
     }
 
     @media (max-width: 800px) {
-        .checkout-container {
-            grid-template-columns: 1fr;
-        }
-        .order-summary {
-            position: static;
-        }
+        .checkout-container { grid-template-columns: 1fr; }
+        .order-summary { position: static; }
     }
 </style>
 
@@ -242,15 +332,22 @@
     <p class="processing-sub">Please wait, do not close this window</p>
 </div>
 
+<!-- SLIDESHOW OVERLAY -->
+<div class="slideshow-overlay" id="slideshowOverlay">
+    <div class="slide-counter" id="slideCounter">1 / 11</div>
+    <img src="" alt="Slide" class="slide-img" id="slideImage">
+    <button class="slide-skip" onclick="finishSlideshow()">Claim Premium →</button>
+</div>
+
 <div class="checkout-container">
     <!-- LEFT: Order Summary -->
     <div class="order-summary">
         <span class="premium-badge">⭐ Premium Plan</span>
         <h2>Order Summary</h2>
-        
+
         <div class="order-line">
             <span>CodeStreak Premium</span>
-            <strong>₹5.00</strong>
+            <strong>$5.00</strong>
         </div>
         <div class="order-line">
             <span>Duration</span>
@@ -258,11 +355,11 @@
         </div>
         <div class="order-line">
             <span>Tax (GST)</span>
-            <strong>₹0.00</strong>
+            <strong>$0.00</strong>
         </div>
         <div class="order-line total">
             <span>Total</span>
-            <strong>₹5.00</strong>
+            <strong>$5.00</strong>
         </div>
 
         <ul class="order-features">
@@ -277,59 +374,182 @@
     <div class="payment-form">
         <h2>Payment Details</h2>
 
-        <form method="POST" id="paymentForm" onsubmit="showProcessing(event)">
-            
-            <!-- Method Tabs -->
-            <div class="payment-methods">
-                <div class="method-tab active" data-method="card" onclick="selectMethod(this)">💳 Card</div>
-                <div class="method-tab" data-method="upi" onclick="selectMethod(this)">📱 UPI</div>
-                <div class="method-tab" data-method="netbanking" onclick="selectMethod(this)">🏦 NetBanking</div>
-            </div>
+        <!-- Method Tabs -->
+        <div class="payment-methods">
+            <div class="method-tab active" data-method="card" onclick="selectMethod(this, 'card')">💳 Card</div>
+            <div class="method-tab" data-method="upi" onclick="selectMethod(this, 'upi')">📱 UPI</div>
+            <div class="method-tab" data-method="netbanking" onclick="selectMethod(this, 'netbanking')">🏦 NetBanking</div>
+        </div>
 
-            <!-- Card Details -->
-            <div class="form-group">
-                <label>Card Number</label>
-                <input type="text" placeholder="1234 5678 9012 3456" maxlength="19" required>
-            </div>
-
-            <div class="form-group">
-                <label>Cardholder Name</label>
-                <input type="text" placeholder="Name on card" required>
-            </div>
-
-            <div class="form-row">
+        <!-- CARD PANEL -->
+        <div class="method-panel active" id="panel-card">
+            <form method="POST" onsubmit="showProcessing(event)">
                 <div class="form-group">
-                    <label>Expiry</label>
-                    <input type="text" placeholder="MM/YY" maxlength="5" required>
+                    <label>Card Number</label>
+                    <input type="text" placeholder="1234 5678 9012 3456" maxlength="19" required>
                 </div>
                 <div class="form-group">
-                    <label>CVV</label>
-                    <input type="password" placeholder="•••" maxlength="3" required>
+                    <label>Cardholder Name</label>
+                    <input type="text" placeholder="Name on card" required>
                 </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Expiry</label>
+                        <input type="text" placeholder="MM/YY" maxlength="5" required>
+                    </div>
+                    <div class="form-group">
+                        <label>CVV</label>
+                        <input type="password" placeholder="•••" maxlength="3" required>
+                    </div>
+                </div>
+                <button type="submit" class="pay-btn">Pay $5.00 →</button>
+                <div class="secure-note">🔒 Secured with 256-bit SSL encryption</div>
+            </form>
+        </div>
+
+        <!-- UPI PANEL -->
+        <div class="method-panel" id="panel-upi">
+            <div class="upi-qr-box">
+                <div class="qr-image">
+                    <!-- QR CODE - Replace this <svg> with your own QR image if you want -->
+                    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Simple fake QR pattern -->
+                        <rect width="200" height="200" fill="white"/>
+                        <rect x="20" y="20" width="40" height="40" fill="black"/>
+                        <rect x="28" y="28" width="24" height="24" fill="white"/>
+                        <rect x="34" y="34" width="12" height="12" fill="black"/>
+
+                        <rect x="140" y="20" width="40" height="40" fill="black"/>
+                        <rect x="148" y="28" width="24" height="24" fill="white"/>
+                        <rect x="154" y="34" width="12" height="12" fill="black"/>
+
+                        <rect x="20" y="140" width="40" height="40" fill="black"/>
+                        <rect x="28" y="148" width="24" height="24" fill="white"/>
+                        <rect x="34" y="154" width="12" height="12" fill="black"/>
+
+                        <rect x="80" y="30" width="10" height="10" fill="black"/>
+                        <rect x="100" y="30" width="10" height="10" fill="black"/>
+                        <rect x="120" y="60" width="10" height="10" fill="black"/>
+                        <rect x="80" y="80" width="10" height="10" fill="black"/>
+                        <rect x="110" y="80" width="10" height="10" fill="black"/>
+                        <rect x="90" y="100" width="10" height="10" fill="black"/>
+                        <rect x="120" y="100" width="10" height="10" fill="black"/>
+                        <rect x="60" y="120" width="10" height="10" fill="black"/>
+                        <rect x="80" y="130" width="10" height="10" fill="black"/>
+                        <rect x="100" y="130" width="10" height="10" fill="black"/>
+                        <rect x="120" y="140" width="10" height="10" fill="black"/>
+                        <rect x="80" y="160" width="10" height="10" fill="black"/>
+                        <rect x="110" y="160" width="10" height="10" fill="black"/>
+                        <rect x="140" y="140" width="10" height="10" fill="black"/>
+                        <rect x="160" y="120" width="10" height="10" fill="black"/>
+                        <rect x="140" y="80" width="10" height="10" fill="black"/>
+                        <rect x="160" y="100" width="10" height="10" fill="black"/>
+                    </svg>
+                </div>
+                <div class="upi-id">codestreak@upi</div>
+                <div class="upi-hint">Scan with any UPI app · Or click the button below</div>
             </div>
 
-            <button type="submit" class="pay-btn">Pay ₹5.00 →</button>
+            <form method="POST" onsubmit="startSlideshow(event)" class="scan-btn">
+                <button type="submit" class="pay-btn">📱 I've Scanned the QR →</button>
+                <div class="secure-note">🔒 Secured with 256-bit SSL encryption</div>
+            </form>
+        </div>
 
-            <div class="secure-note">
-                🔒 Secured with 256-bit SSL encryption
-            </div>
-        </form>
+        <!-- NETBANKING PANEL -->
+        <div class="method-panel" id="panel-netbanking">
+            <form method="POST" onsubmit="showProcessing(event)">
+                <div class="form-group">
+                    <label>Select Bank</label>
+                    <input type="text" placeholder="HDFC / SBI / ICICI / Axis" required>
+                </div>
+                <div class="form-group">
+                    <label>Net Banking ID</label>
+                    <input type="text" placeholder="your-user-id" required>
+                </div>
+                <button type="submit" class="pay-btn">Pay $5.00 →</button>
+                <div class="secure-note">🔒 Secured with 256-bit SSL encryption</div>
+            </form>
+        </div>
     </div>
 </div>
 
 <script>
-    function selectMethod(el) {
+    // ================= TAB SWITCHER =================
+    function selectMethod(el, method) {
         document.querySelectorAll('.method-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.method-panel').forEach(p => p.classList.remove('active'));
         el.classList.add('active');
+        document.getElementById('panel-' + method).classList.add('active');
     }
 
+    // ================= CARD / NETBANKING PROCESSING =================
     function showProcessing(event) {
-        // Don't block the form — let it submit
-        // Just show the overlay for 2 seconds while the form submits in the background
         document.getElementById('processingOverlay').classList.add('active');
-        
         // Let the form submit normally
-        // No event.preventDefault() — this lets Flask process it
+    }
+
+    // ================= UPI SLIDESHOW =================
+    // ADD YOUR MEME IMAGES HERE — save them to static/memes/
+    const memeImages = [
+        "{{ url_for('static', filename='memes/1.jpg') }}",
+        "{{ url_for('static', filename='memes/2.jpg') }}",
+        "{{ url_for('static', filename='memes/3.jpg') }}",
+        "{{ url_for('static', filename='memes/4.jpg') }}",
+        "{{ url_for('static', filename='memes/5.jpg') }}",
+        "{{ url_for('static', filename='memes/6.jpg') }}",
+        "{{ url_for('static', filename='memes/7.jpg') }}",
+        "{{ url_for('static', filename='memes/8.jpg') }}",
+        "{{ url_for('static', filename='memes/9.jpg') }}",
+        "{{ url_for('static', filename='memes/10.jpg') }}",
+        "{{ url_for('static', filename='memes/11.jpg') }}"
+    ];
+
+    let slideIndex = 0;
+    let slideInterval = null;
+
+    function startSlideshow(event) {
+        event.preventDefault();
+
+        const overlay = document.getElementById('slideshowOverlay');
+        const img = document.getElementById('slideImage');
+        const counter = document.getElementById('slideCounter');
+
+        overlay.classList.add('active');
+        slideIndex = 0;
+        img.src = memeImages[0];
+        counter.textContent = '1 / ' + memeImages.length;
+
+        slideInterval = setInterval(function() {
+            slideIndex++;
+            if (slideIndex >= memeImages.length) {
+                // Slideshow done — submit the payment
+                finishSlideshow();
+                return;
+            }
+            img.src = memeImages[slideIndex];
+            counter.textContent = (slideIndex + 1) + ' / ' + memeImages.length;
+        }, 1000); // 1 seconds per slide
+    }
+
+    function finishSlideshow() {
+        if (slideInterval) {
+            clearInterval(slideInterval);
+            slideInterval = null;
+        }
+
+        // Hide slideshow, show processing
+        document.getElementById('slideshowOverlay').classList.remove('active');
+        document.getElementById('processingOverlay').classList.add('active');
+
+        // Submit the payment form after a short delay
+        setTimeout(function() {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = window.location.href;
+            document.body.appendChild(form);
+            form.submit();
+        }, 1500);
     }
 </script>
 
