@@ -703,26 +703,6 @@
     </div>
 </div>
 
-<!-- FROM BROWSER TO DATABASE -->
-<div class="arch-section fade-in-section">
-    <h2 class="arch-heading">From <span>browser</span> to database</h2>
-    <p class="arch-subtitle">A clean three-tier architecture: a React frontend, a Flask/Python API, and a MySQL database for persistence.</p>
-    <div class="arch-container">
-        <div class="arch-nodes">
-            <div class="arch-node"><div class="arch-icon gold">🌐</div><h4>Browser</h4><p>React + Tailwind</p></div>
-            <div class="arch-connector gold"><div class="dot"></div></div>
-            <div class="arch-node"><div class="arch-icon red">🗄️</div><h4>Flask / Python</h4><p>REST API server</p></div>
-            <div class="arch-connector red"><div class="dot"></div></div>
-            <div class="arch-node"><div class="arch-icon purple">💾</div><h4>MySQL</h4><p>Data persistence</p></div>
-        </div>
-        <div class="arch-descriptions">
-            <div class="arch-desc gold"><p><strong>Frontend</strong> renders lessons, quizzes, and the gamified dashboard. Talks to the API over HTTPS.</p></div>
-            <div class="arch-desc red"><p><strong>Flask API</strong> validates answers, awards XP, tracks streaks, and enforces business logic server-side.</p></div>
-            <div class="arch-desc purple"><p><strong>MySQL</strong> stores users, lessons, quiz attempts, and progress — durable across sessions and devices.</p></div>
-        </div>
-    </div>
-</div>
-
 <!-- DATABASE -->
 <div class="section-padding fade-in-section">
     <div class="grid-2" style="text-align: left;">
