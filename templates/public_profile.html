@@ -1,0 +1,219 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+    .profile-container {
+        max-width: 900px;
+        margin: 80px auto;
+        padding: 20px;
+    }
+    .profile-hero {
+        background: linear-gradient(135deg, #1A1B2E, #151B2B);
+        border: 1px solid rgba(245, 185, 66, 0.25);
+        border-radius: 24px;
+        padding: 50px 40px;
+        text-align: center;
+        box-shadow: 0 0 0 1px rgba(245, 185, 66, 0.1), 0 0 40px rgba(245, 185, 66, 0.08);
+        margin-bottom: 30px;
+    }
+    .profile-avatar-img {
+        width: 130px;
+        height: 130px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin: 0 auto 20px;
+        display: block;
+        border: 4px solid var(--amber-gold);
+        box-shadow: 0 0 40px rgba(245, 185, 66, 0.5);
+    }
+    .profile-avatar-init {
+        width: 130px;
+        height: 130px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--amber-gold), #F5893D);
+        color: var(--near-black);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-family: 'Playfair Display', serif;
+        font-weight: 700;
+        font-size: 4rem;
+        margin: 0 auto 20px;
+        border: 4px solid var(--amber-gold);
+        box-shadow: 0 0 40px rgba(245, 185, 66, 0.5);
+    }
+    .profile-username {
+        font-family: 'Playfair Display', serif;
+        font-size: 2.5rem;
+        color: var(--off-white);
+        margin-bottom: 8px;
+    }
+    .profile-bio {
+        color: #B8B3D1;
+        font-style: italic;
+        margin: 15px auto;
+        max-width: 500px;
+    }
+    .profile-rank-badge {
+        display: inline-block;
+        padding: 8px 22px;
+        border-radius: 30px;
+        background: rgba(245, 185, 66, 0.15);
+        border: 1px solid rgba(245, 185, 66, 0.5);
+        color: var(--amber-gold);
+        font-weight: 700;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        margin-bottom: 25px;
+    }
+    .profile-stats-row {
+        display: flex;
+        justify-content: center;
+        gap: 40px;
+        margin-top: 20px;
+        color: #8B92A8;
+        font-size: 0.9rem;
+    }
+    .profile-stats-row strong {
+        display: block;
+        font-size: 1.6rem;
+        color: var(--amber-gold);
+        font-family: 'Playfair Display', serif;
+    }
+    .follow-btn {
+        display: inline-block;
+        margin-top: 25px;
+        padding: 14px 32px;
+        border-radius: 12px;
+        font-weight: 700;
+        text-decoration: none;
+        cursor: pointer;
+        transition: 0.3s;
+        border: none;
+    }
+    .btn-follow { background: var(--amber-gold); color: var(--near-black); }
+    .btn-follow:hover { background: #FFCB5D; transform: translateY(-2px); }
+    .btn-unfollow {
+        background: transparent;
+        color: #E84A6B;
+        border: 1px solid rgba(232, 74, 107, 0.5);
+    }
+    .btn-unfollow:hover { background: rgba(232, 74, 107, 0.1); }
+
+    /* Activity feed */
+    .activity-card {
+        background: #151B2B;
+        border: 1px solid rgba(63, 169, 245, 0.15);
+        border-radius: 16px;
+        padding: 30px;
+    }
+    .activity-card h2 {
+        font-family: 'Playfair Display', serif;
+        color: var(--off-white);
+        font-size: 1.4rem;
+        margin-bottom: 25px;
+    }
+    .activity-item {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 15px;
+        background: #0B0F19;
+        border-radius: 12px;
+        border-left: 3px solid var(--amber-gold);
+        margin-bottom: 12px;
+    }
+    .activity-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(245, 185, 66, 0.15);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 1.2rem;
+    }
+    .activity-text {
+        color: var(--off-white);
+        font-size: 0.95rem;
+    }
+    .activity-time {
+        color: #8B92A8;
+        font-size: 0.8rem;
+        margin-top: 3px;
+    }
+    .empty-state {
+        text-align: center;
+        color: #8B92A8;
+        padding: 30px;
+        font-style: italic;
+    }
+</style>
+
+<div class="profile-container">
+    <!-- PROFILE HERO -->
+    <div class="profile-hero">
+        {% if profile_user['profile_picture'] %}
+            <img src="{{ url_for('static', filename='uploads/' + profile_user['profile_picture']) }}" 
+                 alt="{{ profile_user['username'] }}" class="profile-avatar-img">
+        {% else %}
+            <div class="profile-avatar-init">{{ profile_user['username'][0]|upper }}</div>
+        {% endif %}
+        
+        <h1 class="profile-username">{{ profile_user['username'] }}</h1>
+        
+        {% if profile_user['bio'] %}
+            <p class="profile-bio">"{{ profile_user['bio'] }}"</p>
+        {% endif %}
+        
+        <div class="profile-rank-badge">
+            {% if profile_user['rank'] == 'Bronze' %}🥉
+            {% elif profile_user['rank'] == 'Silver' %}🥈
+            {% elif profile_user['rank'] == 'Gold' %}🏆
+            {% elif profile_user['rank'] == 'Platinum' %}👑
+            {% endif %}
+            {{ profile_user['rank'] }} Tier
+        </div>
+
+        <div class="profile-stats-row">
+            <div><strong>{{ profile_user['total_points'] }}</strong> XP</div>
+            <div><strong>{{ profile_user['streak'] }}</strong> Streak</div>
+            <div><strong>{{ completed_lessons }}</strong> Lessons</div>
+            <div><strong>{{ counts.followers }}</strong> Followers</div>
+            <div><strong>{{ counts.following }}</strong> Following</div>
+        </div>
+
+        {% if not is_own_profile %}
+            {% if is_following %}
+                <a href="{{ url_for('unfollow_user', user_id=profile_user['id']) }}" class="follow-btn btn-unfollow">
+                    Unfollow
+                </a>
+            {% else %}
+                <a href="{{ url_for('follow_user', user_id=profile_user['id']) }}" class="follow-btn btn-follow">
+                    + Follow
+                </a>
+            {% endif %}
+        {% endif %}
+    </div>
+
+    <!-- ACTIVITY FEED -->
+    <div class="activity-card">
+        <h2>⚡ Recent Activity</h2>
+        {% if activities %}
+            {% for a in activities %}
+            <div class="activity-item">
+                <div class="activity-icon">📖</div>
+                <div>
+                    <div class="activity-text">{{ a['description'] }}</div>
+                    <div class="activity-time">{{ a['created_at'] }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">No activity yet.</div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

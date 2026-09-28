@@ -85,6 +85,30 @@ def check_achievements(user_id):
     conn.close()
     return newly_unlocked
 
+def log_activity(user_id, action, description):
+    """Log a user activity event."""
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute(
+        "INSERT INTO activity (user_id, action, description) VALUES (?, ?, ?)",
+        (user_id, action, description)
+    )
+    conn.commit()
+    cur.close()
+    conn.close()
+
+
+def get_follower_count(user_id):
+    """Get follower and following counts."""
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT COUNT(*) as c FROM follows WHERE following_id = ?", (user_id,))
+    followers = cur.fetchone()['c']
+    cur.execute("SELECT COUNT(*) as c FROM follows WHERE follower_id = ?", (user_id,))
+    following = cur.fetchone()['c']
+    cur.close()
+    conn.close()
+    return {'followers': followers, 'following': following}
 
 def update_user_rank(user_id):
     """Update the user's rank based on their total points."""
@@ -282,9 +306,35 @@ def dashboard():
     cur.execute("SELECT * FROM lessons ORDER BY order_index ASC")
     lessons = cur.fetchall()
     
+    # Get activity feed (own + followed users)
+    cur.execute("""
+        SELECT a.action, a.description, a.created_at, u.username, u.profile_picture
+        FROM activity a
+        JOIN users u ON a.user_id = u.id
+        WHERE a.user_id = ? 
+           OR a.user_id IN (SELECT following_id FROM follows WHERE follower_id = ?)
+        ORDER BY a.created_at DESC
+        LIMIT 10
+    """, (session['user_id'], session['user_id']))
+    feed = cur.fetchall()
+    
+    # Follower counts for the current user
+    cur.execute("SELECT COUNT(*) as c FROM follows WHERE following_id = ?", (session['user_id'],))
+    follower_count = cur.fetchone()['c']
+    cur.execute("SELECT COUNT(*) as c FROM follows WHERE follower_id = ?", (session['user_id'],))
+    following_count = cur.fetchone()['c']
+    
     cur.close()
     conn.close()
-    return render_template('dashboard.html', user=user, lessons=lessons)
+    
+    return render_template(
+        'dashboard.html',
+        user=user,
+        lessons=lessons,
+        feed=feed,
+        follower_count=follower_count,
+        following_count=following_count
+    )
 
 @app.route('/lessons')
 def lessons():
@@ -349,6 +399,7 @@ def complete_lesson(lesson_id):
             # After awarding XP and committing:
             update_user_rank(session['user_id'])
             check_achievements(session['user_id'])  
+            log_activity(session['user_id'], 'lesson_completed', f'Completed "{lesson["title"]}" (+{xp} XP)')
             flash(f'🎉 Correct! You earned {xp} XP!', 'success')
             
             # Redirect to the NEXT lesson if it exists
@@ -875,6 +926,135 @@ def remove_profile_picture():
     cur.close()
     conn.close()
     return redirect(url_for('profile'))
+
+# ================= COMMUNITY & SOCIAL =================
+
+@app.route('/users')
+def users_directory():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT id, username, total_points, streak, `rank`, profile_picture, bio
+        FROM users
+        WHERE id != ?
+        ORDER BY total_points DESC
+        LIMIT 50
+    """, (session['user_id'],))
+    users = cur.fetchall()
+    
+    # Get who the current user follows
+    cur.execute("SELECT following_id FROM follows WHERE follower_id = ?", (session['user_id'],))
+    following_ids = [row['following_id'] for row in cur.fetchall()]
+    
+    cur.close()
+    conn.close()
+    
+    return render_template('users.html', users=users, following_ids=following_ids)
+
+
+@app.route('/user/<username>')
+def public_profile(username):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    conn = get_db()
+    cur = conn.cursor()
+    
+    # Get the user
+    cur.execute("SELECT * FROM users WHERE username = ?", (username,))
+    user = cur.fetchone()
+    
+    if not user:
+        flash('User not found.', 'danger')
+        return redirect(url_for('users_directory'))
+    
+    # Count completed lessons
+    cur.execute(
+        "SELECT COUNT(*) as c FROM progress WHERE user_id = ? AND status = 'completed'",
+        (user['id'],)
+    )
+    completed = cur.fetchone()['c']
+    
+    # Recent activity
+    cur.execute("""
+        SELECT action, description, created_at
+        FROM activity
+        WHERE user_id = ?
+        ORDER BY created_at DESC
+        LIMIT 10
+    """, (user['id'],))
+    activities = cur.fetchall()
+    
+    # Check if current user follows them
+    cur.execute(
+        "SELECT id FROM follows WHERE follower_id = ? AND following_id = ?",
+        (session['user_id'], user['id'])
+    )
+    is_following = cur.fetchone() is not None
+    
+    cur.close()
+    conn.close()
+    
+    counts = get_follower_count(user['id'])
+    
+    return render_template(
+        'public_profile.html',
+        profile_user=user,
+        completed_lessons=completed,
+        activities=activities,
+        is_following=is_following,
+        counts=counts,
+        is_own_profile=(user['id'] == session['user_id'])
+    )
+
+
+@app.route('/follow/<int:user_id>')
+def follow_user(user_id):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    if user_id == session['user_id']:
+        flash('You cannot follow yourself.', 'danger')
+        return redirect(url_for('users_directory'))
+    
+    conn = get_db()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            "INSERT INTO follows (follower_id, following_id) VALUES (?, ?)",
+            (session['user_id'], user_id)
+        )
+        conn.commit()
+        flash('You are now following this user!', 'success')
+    except:
+        pass  # Already following
+    finally:
+        cur.close()
+        conn.close()
+    
+    return redirect(request.referrer or url_for('users_directory'))
+
+
+@app.route('/unfollow/<int:user_id>')
+def unfollow_user(user_id):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute(
+        "DELETE FROM follows WHERE follower_id = ? AND following_id = ?",
+        (session['user_id'], user_id)
+    )
+    conn.commit()
+    cur.close()
+    conn.close()
+    
+    flash('Unfollowed.', 'info')
+    return redirect(request.referrer or url_for('users_directory'))
 
 # ================= ERROR HANDLERS =================
 

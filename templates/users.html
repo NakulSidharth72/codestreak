@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+    .users-container {
+        max-width: 1100px;
+        margin: 80px auto;
+        padding: 20px;
+    }
+    .users-header {
+        text-align: center;
+        margin-bottom: 50px;
+    }
+    .users-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 3rem;
+        color: var(--off-white);
+        margin-bottom: 10px;
+    }
+    .users-subtitle { color: #8B92A8; font-size: 1.05rem; }
+
+    .users-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 20px;
+    }
+    .user-card {
+        background: #151B2B;
+        border: 1px solid rgba(63, 169, 245, 0.15);
+        border-radius: 16px;
+        padding: 25px;
+        text-align: center;
+        transition: 0.3s;
+        box-shadow: 0 0 0 1px rgba(245, 185, 66, 0.08);
+    }
+    .user-card:hover {
+        border-color: rgba(245, 185, 66, 0.4);
+        transform: translateY(-3px);
+        box-shadow: 0 0 30px rgba(245, 185, 66, 0.15);
+    }
+    .user-card-avatar {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        margin: 0 auto 15px;
+        display: block;
+        object-fit: cover;
+        border: 3px solid rgba(245, 185, 66, 0.4);
+    }
+    .user-card-avatar-init {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        margin: 0 auto 15px;
+        background: linear-gradient(135deg, var(--amber-gold), #F5893D);
+        color: var(--near-black);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-family: 'Playfair Display', serif;
+        font-weight: 700;
+        font-size: 1.8rem;
+        border: 3px solid rgba(245, 185, 66, 0.4);
+    }
+    .user-card-name {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.3rem;
+        color: var(--off-white);
+        margin-bottom: 5px;
+    }
+    .user-card-rank {
+        display: inline-block;
+        font-size: 0.75rem;
+        color: var(--amber-gold);
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        margin-bottom: 15px;
+    }
+    .user-card-stats {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        margin-bottom: 20px;
+        color: #8B92A8;
+        font-size: 0.85rem;
+    }
+    .user-card-stats strong {
+        color: var(--off-white);
+        display: block;
+        font-size: 1.1rem;
+    }
+    .user-card-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+    }
+    .btn-small {
+        padding: 10px 18px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+        border: none;
+        transition: 0.3s;
+    }
+    .btn-view {
+        background: rgba(63, 169, 245, 0.15);
+        color: var(--azure-blue);
+        border: 1px solid rgba(63, 169, 245, 0.4);
+    }
+    .btn-view:hover { background: rgba(63, 169, 245, 0.25); }
+    .btn-follow {
+        background: var(--amber-gold);
+        color: var(--near-black);
+    }
+    .btn-follow:hover { background: #FFCB5D; }
+    .btn-unfollow {
+        background: transparent;
+        color: #E84A6B;
+        border: 1px solid rgba(232, 74, 107, 0.4);
+    }
+    .btn-unfollow:hover { background: rgba(232, 74, 107, 0.1); }
+</style>
+
+<div class="users-container">
+    <div class="users-header">
+        <h1 class="users-title">👥 Community</h1>
+        <p class="users-subtitle">Discover other learners and grow together</p>
+    </div>
+
+    {% if users %}
+    <div class="users-grid">
+        {% for u in users %}
+        <div class="user-card">
+            {% if u['profile_picture'] %}
+                <img src="{{ url_for('static', filename='uploads/' + u['profile_picture']) }}" 
+                     alt="{{ u['username'] }}" class="user-card-avatar">
+            {% else %}
+                <div class="user-card-avatar-init">{{ u['username'][0]|upper }}</div>
+            {% endif %}
+            
+            <h3 class="user-card-name">{{ u['username'] }}</h3>
+            <span class="user-card-rank">
+                {% if u['rank'] == 'Bronze' %}🥉
+                {% elif u['rank'] == 'Silver' %}🥈
+                {% elif u['rank'] == 'Gold' %}🏆
+                {% elif u['rank'] == 'Platinum' %}👑
+                {% endif %}
+                {{ u['rank'] }}
+            </span>
+
+            <div class="user-card-stats">
+                <div>
+                    <strong>{{ u['total_points'] }}</strong>
+                    XP
+                </div>
+                <div>
+                    <strong>{{ u['streak'] }}</strong>
+                    Streak
+                </div>
+            </div>
+
+            <div class="user-card-actions">
+                <a href="{{ url_for('public_profile', username=u['username']) }}" class="btn-small btn-view">
+                    View Profile
+                </a>
+                {% if u['id'] in following_ids %}
+                    <a href="{{ url_for('unfollow_user', user_id=u['id']) }}" class="btn-small btn-unfollow">
+                        Unfollow
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('follow_user', user_id=u['id']) }}" class="btn-small btn-follow">
+                        + Follow
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+        <p style="text-align: center; color: #8B92A8;">No other users yet. Invite your friends!</p>
+    {% endif %}
+</div>
+
+{% endblock %}
