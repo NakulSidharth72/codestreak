@@ -11,7 +11,39 @@
         gap: 40px;
     }
 
-    /* ============ LEFT: Order Summary ============ */
+    /* Plan Switcher */
+    .plan-switcher {
+        max-width: 1000px;
+        margin: 40px auto 0;
+        padding: 0 20px;
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+    }
+    .plan-switch-btn {
+        padding: 12px 28px;
+        border-radius: 12px;
+        background: #151B2B;
+        border: 1px solid rgba(63, 169, 245, 0.2);
+        color: #B8B3D1;
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        text-decoration: none;
+        transition: 0.3s;
+    }
+    .plan-switch-btn:hover {
+        border-color: var(--amber-gold);
+        color: var(--amber-gold);
+    }
+    .plan-switch-btn.active {
+        background: rgba(245, 185, 66, 0.1);
+        border-color: var(--amber-gold);
+        color: var(--amber-gold);
+        box-shadow: 0 0 20px rgba(245, 185, 66, 0.2);
+    }
+
+    /* LEFT: Order Summary */
     .order-summary {
         background: #151B2B;
         border: 1px solid rgba(245, 185, 66, 0.25);
@@ -81,7 +113,7 @@
         font-weight: 700;
     }
 
-    /* ============ RIGHT: Payment Form ============ */
+    /* RIGHT: Payment Form */
     .payment-form {
         background: #151B2B;
         border: 1px solid rgba(63, 169, 245, 0.15);
@@ -122,13 +154,10 @@
         border-color: rgba(245, 185, 66, 0.5);
     }
 
-    /* ============ METHOD CONTENT PANELS ============ */
     .method-panel { display: none; }
     .method-panel.active { display: block; }
 
-    .form-group {
-        margin-bottom: 20px;
-    }
+    .form-group { margin-bottom: 20px; }
     .form-group label {
         display: block;
         color: #B8B3D1;
@@ -191,7 +220,7 @@
         margin-top: 20px;
     }
 
-    /* ============ UPI QR ============ */
+    /* UPI QR */
     .upi-qr-box {
         text-align: center;
         padding: 30px 20px;
@@ -211,25 +240,17 @@
         align-items: center;
         justify-content: center;
     }
-    .qr-image svg {
-        width: 100%;
-        height: 100%;
-    }
+    .qr-image svg { width: 100%; height: 100%; }
     .upi-id {
         color: var(--amber-gold);
         font-weight: 700;
         font-size: 1rem;
         margin-bottom: 6px;
     }
-    .upi-hint {
-        color: #8B92A8;
-        font-size: 0.85rem;
-    }
-    .scan-btn {
-        margin-top: 20px;
-    }
+    .upi-hint { color: #8B92A8; font-size: 0.85rem; }
+    .scan-btn { margin-top: 20px; }
 
-    /* ============ SLIDESHOW OVERLAY ============ */
+    /* Slideshow Overlay */
     .slideshow-overlay {
         position: fixed;
         inset: 0;
@@ -239,9 +260,7 @@
         align-items: center;
         z-index: 99999;
     }
-    .slideshow-overlay.active {
-        display: flex;
-    }
+    .slideshow-overlay.active { display: flex; }
     .slide-img {
         max-width: 90vw;
         max-height: 90vh;
@@ -254,8 +273,7 @@
     }
     .slide-counter {
         position: absolute;
-        top: 30px;
-        right: 30px;
+        top: 30px; right: 30px;
         color: #fff;
         font-size: 1.2rem;
         font-weight: 700;
@@ -266,8 +284,7 @@
     }
     .slide-skip {
         position: absolute;
-        bottom: 30px;
-        right: 30px;
+        bottom: 30px; right: 30px;
         color: #fff;
         background: var(--amber-gold);
         padding: 12px 24px;
@@ -280,12 +297,9 @@
         transition: 0.3s;
         z-index: 2;
     }
-    .slide-skip:hover {
-        background: #FFCB5D;
-        transform: translateY(-2px);
-    }
+    .slide-skip:hover { background: #FFCB5D; transform: translateY(-2px); }
 
-    /* ============ PROCESSING OVERLAY ============ */
+    /* Processing Overlay */
     .processing-overlay {
         position: fixed;
         inset: 0;
@@ -299,8 +313,7 @@
     }
     .processing-overlay.active { display: flex; }
     .spinner {
-        width: 70px;
-        height: 70px;
+        width: 70px; height: 70px;
         border: 4px solid rgba(245, 185, 66, 0.2);
         border-top-color: var(--amber-gold);
         border-radius: 50%;
@@ -314,14 +327,12 @@
         font-size: 1.5rem;
         margin-bottom: 10px;
     }
-    .processing-sub {
-        color: #8B92A8;
-        font-size: 0.9rem;
-    }
+    .processing-sub { color: #8B92A8; font-size: 0.9rem; }
 
     @media (max-width: 800px) {
         .checkout-container { grid-template-columns: 1fr; }
         .order-summary { position: static; }
+        .plan-switcher { flex-direction: column; align-items: stretch; }
     }
 </style>
 
@@ -339,15 +350,25 @@
     <button class="slide-skip" onclick="finishSlideshow()">Claim Premium →</button>
 </div>
 
+<!-- PLAN SWITCHER -->
+<div class="plan-switcher">
+    <a href="{{ url_for('payment') }}?plan=pro" class="plan-switch-btn {% if plan_key == 'pro' %}active{% endif %}">
+        💎 Pro — $9/month
+    </a>
+    <a href="{{ url_for('payment') }}?plan=teams" class="plan-switch-btn {% if plan_key == 'teams' %}active{% endif %}">
+        👥 Teams — $29/month
+    </a>
+</div>
+
 <div class="checkout-container">
     <!-- LEFT: Order Summary -->
     <div class="order-summary">
-        <span class="premium-badge">⭐ Premium Plan</span>
+        <span class="premium-badge">⭐ {{ plan.name }} Plan</span>
         <h2>Order Summary</h2>
 
         <div class="order-line">
-            <span>CodeStreak Premium</span>
-            <strong>$5.00</strong>
+            <span>CodeStreak {{ plan.name }}</span>
+            <strong>{{ plan.price_display }}</strong>
         </div>
         <div class="order-line">
             <span>Duration</span>
@@ -359,14 +380,13 @@
         </div>
         <div class="order-line total">
             <span>Total</span>
-            <strong>$5.00</strong>
+            <strong>{{ plan.price_display }}</strong>
         </div>
 
         <ul class="order-features">
-            <li>Unlimited lessons</li>
-            <li>Advanced challenge packs</li>
-            <li>Progress insights</li>
-            <li>Priority leaderboard rank</li>
+            {% for feature in plan.features %}
+            <li>{{ feature }}</li>
+            {% endfor %}
         </ul>
     </div>
 
@@ -374,7 +394,6 @@
     <div class="payment-form">
         <h2>Payment Details</h2>
 
-        <!-- Method Tabs -->
         <div class="payment-methods">
             <div class="method-tab active" data-method="card" onclick="selectMethod(this, 'card')">💳 Card</div>
             <div class="method-tab" data-method="upi" onclick="selectMethod(this, 'upi')">📱 UPI</div>
@@ -383,7 +402,8 @@
 
         <!-- CARD PANEL -->
         <div class="method-panel active" id="panel-card">
-            <form method="POST" onsubmit="showProcessing(event)">
+            <form method="POST">
+                <input type="hidden" name="selected_plan" value="{{ plan_key }}">
                 <div class="form-group">
                     <label>Card Number</label>
                     <input type="text" placeholder="1234 5678 9012 3456" maxlength="19" required>
@@ -402,7 +422,7 @@
                         <input type="password" placeholder="•••" maxlength="3" required>
                     </div>
                 </div>
-                <button type="submit" class="pay-btn">Pay $5.00 →</button>
+                <button type="submit" class="pay-btn">Pay {{ plan.price_display }} →</button>
                 <div class="secure-note">🔒 Secured with 256-bit SSL encryption</div>
             </form>
         </div>
@@ -411,22 +431,17 @@
         <div class="method-panel" id="panel-upi">
             <div class="upi-qr-box">
                 <div class="qr-image">
-                    <!-- QR CODE - Replace this <svg> with your own QR image if you want -->
                     <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-                        <!-- Simple fake QR pattern -->
                         <rect width="200" height="200" fill="white"/>
                         <rect x="20" y="20" width="40" height="40" fill="black"/>
                         <rect x="28" y="28" width="24" height="24" fill="white"/>
                         <rect x="34" y="34" width="12" height="12" fill="black"/>
-
                         <rect x="140" y="20" width="40" height="40" fill="black"/>
                         <rect x="148" y="28" width="24" height="24" fill="white"/>
                         <rect x="154" y="34" width="12" height="12" fill="black"/>
-
                         <rect x="20" y="140" width="40" height="40" fill="black"/>
                         <rect x="28" y="148" width="24" height="24" fill="white"/>
                         <rect x="34" y="154" width="12" height="12" fill="black"/>
-
                         <rect x="80" y="30" width="10" height="10" fill="black"/>
                         <rect x="100" y="30" width="10" height="10" fill="black"/>
                         <rect x="120" y="60" width="10" height="10" fill="black"/>
@@ -451,6 +466,7 @@
             </div>
 
             <form method="POST" onsubmit="startSlideshow(event)" class="scan-btn">
+                <input type="hidden" name="selected_plan" value="{{ plan_key }}">
                 <button type="submit" class="pay-btn">📱 I've Scanned the QR →</button>
                 <div class="secure-note">🔒 Secured with 256-bit SSL encryption</div>
             </form>
@@ -458,7 +474,8 @@
 
         <!-- NETBANKING PANEL -->
         <div class="method-panel" id="panel-netbanking">
-            <form method="POST" onsubmit="showProcessing(event)">
+            <form method="POST">
+                <input type="hidden" name="selected_plan" value="{{ plan_key }}">
                 <div class="form-group">
                     <label>Select Bank</label>
                     <input type="text" placeholder="HDFC / SBI / ICICI / Axis" required>
@@ -467,7 +484,7 @@
                     <label>Net Banking ID</label>
                     <input type="text" placeholder="your-user-id" required>
                 </div>
-                <button type="submit" class="pay-btn">Pay $5.00 →</button>
+                <button type="submit" class="pay-btn">Pay {{ plan.price_display }} →</button>
                 <div class="secure-note">🔒 Secured with 256-bit SSL encryption</div>
             </form>
         </div>
@@ -475,7 +492,6 @@
 </div>
 
 <script>
-    // ================= TAB SWITCHER =================
     function selectMethod(el, method) {
         document.querySelectorAll('.method-tab').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.method-panel').forEach(p => p.classList.remove('active'));
@@ -483,14 +499,11 @@
         document.getElementById('panel-' + method).classList.add('active');
     }
 
-    // ================= CARD / NETBANKING PROCESSING =================
     function showProcessing(event) {
         document.getElementById('processingOverlay').classList.add('active');
-        // Let the form submit normally
     }
 
-    // ================= UPI SLIDESHOW =================
-    // ADD YOUR MEME IMAGES HERE — save them to static/images/
+    // UPI slideshow
     const memeImages = [
         "{{ url_for('static', filename='images/1.jpg') }}",
         "{{ url_for('static', filename='images/2.jpg') }}",
@@ -507,9 +520,11 @@
 
     let slideIndex = 0;
     let slideInterval = null;
+    let formToSubmit = null;
 
     function startSlideshow(event) {
         event.preventDefault();
+        formToSubmit = event.target;
 
         const overlay = document.getElementById('slideshowOverlay');
         const img = document.getElementById('slideImage');
@@ -523,13 +538,12 @@
         slideInterval = setInterval(function() {
             slideIndex++;
             if (slideIndex >= memeImages.length) {
-                // Slideshow done — submit the payment
                 finishSlideshow();
                 return;
             }
             img.src = memeImages[slideIndex];
             counter.textContent = (slideIndex + 1) + ' / ' + memeImages.length;
-        }, 1000); // 1 seconds per slide
+        }, 1000);
     }
 
     function finishSlideshow() {
@@ -537,18 +551,13 @@
             clearInterval(slideInterval);
             slideInterval = null;
         }
-
-        // Hide slideshow, show processing
         document.getElementById('slideshowOverlay').classList.remove('active');
         document.getElementById('processingOverlay').classList.add('active');
 
-        // Submit the payment form after a short delay
         setTimeout(function() {
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = window.location.href;
-            document.body.appendChild(form);
-            form.submit();
+            if (formToSubmit) {
+                formToSubmit.submit();
+            }
         }, 1500);
     }
 </script>

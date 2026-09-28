@@ -939,11 +939,47 @@
     <h2 class="big-heading">Start free.<br>Go <span class="yellow">further</span> when <span class="red">ready.</span></h2>
     <p class="body-text">No card required to build your first streak.</p>
     <div class="pricing-grid">
-        <div class="pricing-card"><div class="plan-name">FREE</div><div class="price">$0<small> / forever</small></div><p class="plan-desc">For building the habit.</p><ul class="plan-features"><li>9 core lessons</li><li>XP and streaks</li><li>Achievement badges</li></ul><a href="{{ url_for('register') }}" class="plan-btn btn-dark">Start free →</a></div>
-        <div class="pricing-card pro"><div class="most-momentum">MOST MOMENTUM</div><div class="plan-name" style="color: var(--amber-gold);">PRO</div><div class="price">$9<small> / month</small></div><p class="plan-desc">For a deeper daily practice.</p><ul class="plan-features"><li>Everything in Free</li><li>Advanced challenge packs</li><li>Progress insights</li></ul><a href="{{ url_for('payment') }}" class="plan-btn btn-yellow-pro">Go Pro →</a></div>
-        <div class="pricing-card"><div class="plan-name">TEAMS</div><div class="price">$29<small> / month</small></div><p class="plan-desc">For small learning squads.</p><ul class="plan-features"><li>Shared leaderboard</li><li>Cohort analytics</li><li>Team challenges</li></ul><a href="#" class="plan-btn btn-dark">Talk to us →</a></div>
+        <!-- FREE -->
+        <div class="pricing-card">
+            <div class="plan-name">FREE</div>
+            <div class="price">$0<small> / forever</small></div>
+            <p class="plan-desc">For building the habit.</p>
+            <ul class="plan-features">
+                <li>9 core lessons</li>
+                <li>XP and streaks</li>
+                <li>Achievement badges</li>
+            </ul>
+            <a href="{{ url_for('register') }}" class="plan-btn btn-dark">Start free →</a>
+        </div>
+
+        <!-- PRO -->
+        <div class="pricing-card pro">
+            <div class="most-momentum">MOST MOMENTUM</div>
+            <div class="plan-name" style="color: var(--amber-gold);">PRO</div>
+            <div class="price">$9<small> / month</small></div>
+            <p class="plan-desc">For a deeper daily practice.</p>
+            <ul class="plan-features">
+                <li>Everything in Free</li>
+                <li>Advanced challenge packs</li>
+                <li>Progress insights</li>
+            </ul>
+            <a href="{{ url_for('payment') }}?plan=pro" class="plan-btn btn-yellow-pro">Go Pro →</a>
+        </div>
+
+        <!-- TEAMS -->
+        <div class="pricing-card">
+            <div class="plan-name">TEAMS</div>
+            <div class="price">$29<small> / month</small></div>
+            <p class="plan-desc">For small learning squads.</p>
+            <ul class="plan-features">
+                <li>Shared leaderboard</li>
+                <li>Cohort analytics</li>
+                <li>Team challenges</li>
+            </ul>
+            <a href="{{ url_for('payment') }}?plan=teams" class="plan-btn btn-dark">Talk to us →</a>
+        </div>
     </div>
-</div>
+</div> 
 
 <!-- MEET THE TEAM -->
 <div class="section-padding fade-in-section">

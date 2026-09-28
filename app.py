@@ -545,20 +545,67 @@ def payment():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     
+    # Get the plan from URL (default: 'pro')
+    plan = request.args.get('plan', 'pro').lower()
+    if plan not in ['pro', 'teams']:
+        plan = 'pro'
+    
+    # Plan details
+    plans = {
+        'pro': {
+            'name': 'Pro',
+            'price': 9,
+            'price_display': '$9.00',
+            'period': 'month',
+            'features': [
+                'Everything in Free',
+                'Advanced challenge packs',
+                'Progress insights',
+                'Priority leaderboard rank',
+            ],
+        },
+        'teams': {
+            'name': 'Teams',
+            'price': 29,
+            'price_display': '$29.00',
+            'period': 'month',
+            'features': [
+                'Everything in Pro',
+                'Shared leaderboard',
+                'Cohort analytics',
+                'Team challenges',
+                'Dedicated support',
+            ],
+        },
+    }
+    
+    selected_plan = plans[plan]
+    
     if request.method == 'POST':
         # DEMO MODE: Simulate a successful payment
-        # (No real Razorpay API call — just a UI experience)
+        # Get the plan from the form too (user might have switched)
+        posted_plan = request.form.get('selected_plan', plan).lower()
+        if posted_plan not in ['pro', 'teams']:
+            posted_plan = plan
+        
         conn = get_db()
         cur = conn.cursor()
         cur.execute("UPDATE users SET premium = 1 WHERE id = ?", (session['user_id'],))
+        
+        # Log the payment
+        amount = plans[posted_plan]['price']
+        cur.execute(
+            "INSERT INTO payments (user_id, amount, payment_status, transaction_id) VALUES (?, ?, 'success', ?)",
+            (session['user_id'], amount, f"demo_{posted_plan}_{session['user_id']}")
+        )
         conn.commit()
         cur.close()
         conn.close()
         
-        flash('💎 Payment successful! Welcome to Premium.', 'success')
+        flash(f'💎 Welcome to {plans[posted_plan]["name"]}! Enjoy premium features.', 'success')
         return redirect(url_for('dashboard'))
     
-    return render_template('payment.html')
+    return render_template('payment.html', plan=selected_plan, plan_key=plan, all_plans=plans)
 
 @app.route('/payment/success', methods=['POST'])
 def payment_success():
