@@ -1056,6 +1056,187 @@ def unfollow_user(user_id):
     flash('Unfollowed.', 'info')
     return redirect(request.referrer or url_for('users_directory'))
 
+# ================= FRIENDS & MESSAGES =================
+
+@app.route('/social')
+def social_hub():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    conn = get_db()
+    cur = conn.cursor()
+    
+    # Who I follow
+    cur.execute("""
+        SELECT u.id, u.username, u.total_points, u.streak, u.`rank`, u.profile_picture
+        FROM users u
+        JOIN follows f ON u.id = f.following_id
+        WHERE f.follower_id = ?
+        ORDER BY u.username ASC
+    """, (session['user_id'],))
+    following = cur.fetchall()
+    
+    # Who follows me
+    cur.execute("""
+        SELECT u.id, u.username, u.total_points, u.streak, u.`rank`, u.profile_picture
+        FROM users u
+        JOIN follows f ON u.id = f.follower_id
+        WHERE f.following_id = ?
+        ORDER BY u.username ASC
+    """, (session['user_id'],))
+    followers = cur.fetchall()
+    
+    # Unread message count
+    cur.execute("""
+        SELECT COUNT(*) as c FROM messages 
+        WHERE receiver_id = ? AND is_read = 0
+    """, (session['user_id'],))
+    unread_count = cur.fetchone()['c']
+    
+    cur.close()
+    conn.close()
+    
+    return render_template(
+        'social.html',
+        following=following,
+        followers=followers,
+        unread_count=unread_count
+    )
+
+
+@app.route('/messages')
+def messages_list():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    conn = get_db()
+    cur = conn.cursor()
+    
+    # Get all unique conversation partners (people I've chatted with)
+    cur.execute("""
+        SELECT DISTINCT
+            CASE 
+                WHEN sender_id = ? THEN receiver_id
+                ELSE sender_id
+            END as other_id
+        FROM messages
+        WHERE sender_id = ? OR receiver_id = ?
+    """, (session['user_id'], session['user_id'], session['user_id']))
+    
+    partner_ids = [row['other_id'] for row in cur.fetchall()]
+    
+    # Get their info + last message
+    conversations = []
+    for pid in partner_ids:
+        cur.execute("SELECT id, username, profile_picture FROM users WHERE id = ?", (pid,))
+        partner = cur.fetchone()
+        if not partner:
+            continue
+        
+        cur.execute("""
+            SELECT content, created_at, sender_id
+            FROM messages
+            WHERE (sender_id = ? AND receiver_id = ?)
+               OR (sender_id = ? AND receiver_id = ?)
+            ORDER BY created_at DESC
+            LIMIT 1
+        """, (session['user_id'], pid, pid, session['user_id']))
+        last_msg = cur.fetchone()
+        
+        cur.execute("""
+            SELECT COUNT(*) as c FROM messages
+            WHERE sender_id = ? AND receiver_id = ? AND is_read = 0
+        """, (pid, session['user_id']))
+        unread = cur.fetchone()['c']
+        
+        if last_msg:
+            conversations.append({
+                'user': partner,
+                'last_message': last_msg['content'],
+                'last_time': last_msg['created_at'],
+                'is_mine': last_msg['sender_id'] == session['user_id'],
+                'unread': unread
+            })
+    
+    # Sort by most recent
+    conversations.sort(key=lambda x: x['last_time'], reverse=True)
+    
+    cur.close()
+    conn.close()
+    
+    return render_template('messages_list.html', conversations=conversations)
+
+
+@app.route('/messages/<username>', methods=['GET', 'POST'])
+def chat(username):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    conn = get_db()
+    cur = conn.cursor()
+    
+    # Get the other user
+    cur.execute("SELECT * FROM users WHERE username = ?", (username,))
+    other_user = cur.fetchone()
+    
+    if not other_user or other_user['id'] == session['user_id']:
+        flash('User not found.', 'danger')
+        return redirect(url_for('messages_list'))
+    
+    # Handle sending a message
+    if request.method == 'POST':
+        content = request.form.get('content', '').strip()[:1000]
+        if content:
+            cur.execute("""
+                INSERT INTO messages (sender_id, receiver_id, content)
+                VALUES (?, ?, ?)
+            """, (session['user_id'], other_user['id'], content))
+            conn.commit()
+        return redirect(url_for('chat', username=username))
+    
+    # Mark messages as read
+    cur.execute("""
+        UPDATE messages SET is_read = 1
+        WHERE sender_id = ? AND receiver_id = ?
+    """, (other_user['id'], session['user_id']))
+    conn.commit()
+    
+    # Get all messages between the two users
+    cur.execute("""
+        SELECT * FROM messages
+        WHERE (sender_id = ? AND receiver_id = ?)
+           OR (sender_id = ? AND receiver_id = ?)
+        ORDER BY created_at ASC
+    """, (session['user_id'], other_user['id'], other_user['id'], session['user_id']))
+    messages = cur.fetchall()
+    
+    cur.close()
+    conn.close()
+    
+    return render_template('chat.html', other_user=other_user, messages=messages)
+
+
+@app.route('/messages/send/<int:user_id>', methods=['POST'])
+def quick_send_message(user_id):
+    """Quick send from the social hub."""
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    content = request.form.get('content', '').strip()[:1000]
+    if content:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO messages (sender_id, receiver_id, content)
+            VALUES (?, ?, ?)
+        """, (session['user_id'], user_id, content))
+        conn.commit()
+        cur.close()
+        conn.close()
+        flash('Message sent!', 'success')
+    
+    return redirect(request.referrer or url_for('social_hub'))
+
 # ================= ERROR HANDLERS =================
 
 @app.errorhandler(404)

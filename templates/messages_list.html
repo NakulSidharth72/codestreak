@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+    .messages-container {
+        max-width: 800px;
+        margin: 80px auto;
+        padding: 20px;
+    }
+    .messages-header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+    .messages-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 3rem;
+        color: var(--off-white);
+        margin-bottom: 10px;
+    }
+    .messages-subtitle { color: #8B92A8; }
+
+    .conversation-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    .conversation-item {
+        background: #151B2B;
+        border: 1px solid rgba(63, 169, 245, 0.15);
+        border-radius: 14px;
+        padding: 18px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        text-decoration: none;
+        transition: 0.3s;
+    }
+    .conversation-item:hover {
+        border-color: rgba(245, 185, 66, 0.4);
+        transform: translateY(-2px);
+    }
+    .conv-avatar {
+        width: 55px;
+        height: 55px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid rgba(245, 185, 66, 0.4);
+        flex-shrink: 0;
+    }
+    .conv-avatar-init {
+        width: 55px;
+        height: 55px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--amber-gold), #F5893D);
+        color: var(--near-black);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-family: 'Playfair Display', serif;
+        font-weight: 700;
+        font-size: 1.4rem;
+        flex-shrink: 0;
+    }
+    .conv-info { flex: 1; min-width: 0; }
+    .conv-name {
+        color: var(--off-white);
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+    .conv-preview {
+        color: #8B92A8;
+        font-size: 0.85rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .conv-time {
+        color: #5A6078;
+        font-size: 0.75rem;
+        margin-top: 3px;
+    }
+    .conv-unread {
+        background: #E84A6B;
+        color: white;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+    .empty-messages {
+        text-align: center;
+        padding: 80px 20px;
+        color: #8B92A8;
+        font-style: italic;
+    }
+    .empty-messages a { color: var(--amber-gold); text-decoration: none; }
+</style>
+
+<div class="messages-container">
+    <div class="messages-header">
+        <h1 class="messages-title">💬 Messages</h1>
+        <p class="messages-subtitle">Your conversations</p>
+    </div>
+
+    {% if conversations %}
+        <div class="conversation-list">
+            {% for c in conversations %}
+            <a href="{{ url_for('chat', username=c.user.username) }}" class="conversation-item">
+                {% if c.user.profile_picture %}
+                    <img src="{{ url_for('static', filename='uploads/' + c.user.profile_picture) }}" class="conv-avatar">
+                {% else %}
+                    <div class="conv-avatar-init">{{ c.user.username[0]|upper }}</div>
+                {% endif %}
+                <div class="conv-info">
+                    <div class="conv-name">{{ c.user.username }}</div>
+                    <div class="conv-preview">
+                        {% if c.is_mine %}You: {% endif %}{{ c.last_message }}
+                    </div>
+                    <div class="conv-time">{{ c.last_time }}</div>
+                </div>
+                {% if c.unread > 0 %}
+                    <div class="conv-unread">{{ c.unread }}</div>
+                {% endif %}
+            </a>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-messages">
+            No conversations yet.<br>
+            <a href="{{ url_for('users_directory') }}">Find someone to message →</a>
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}
