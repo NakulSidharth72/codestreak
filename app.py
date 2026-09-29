@@ -5,6 +5,11 @@ import razorpay
 from datetime import date
 import os
 from werkzeug.utils import secure_filename
+from groq import Groq
+
+# AI Config
+GROQ_API_KEY = "gsk_..."  # <-- Paste your Groq API key here
+ai_client = Groq(api_key=GROQ_API_KEY)
 
 app = Flask(__name__)
 app.secret_key = 'codestreak_super_secret_key'
@@ -415,6 +420,45 @@ def complete_lesson(lesson_id):
     cur.close()
     conn.close()
     return redirect(url_for('lesson', lesson_id=lesson_id))
+
+# ================= AI CHAT =================
+
+@app.route('/ai_chat', methods=['POST'])
+def ai_chat():
+    if 'user_id' not in session:
+        return {'reply': 'Please log in to chat with the AI.'}, 401
+    
+    data = request.get_json()
+    user_message = data.get('message', '').strip()[:500]
+    
+    if not user_message:
+        return {'reply': 'Please type a message.'}, 400
+    
+    try:
+        # Build the AI prompt
+        system_prompt = (
+            "You are CodeStreak AI, a friendly Python programming tutor. "
+            "Keep your answers SHORT (2-4 sentences max) and beginner-friendly. "
+            "Use simple language and 1 small code example if helpful. "
+            "If the user asks about non-programming topics, politely redirect to Python."
+        )
+        
+        chat_completion = ai_client.chat.completions.create(
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_message}
+            ],
+            model="llama-3.3-70b-versatile",
+            temperature=0.7,
+            max_tokens=300,
+        )
+        
+        ai_reply = chat_completion.choices[0].message.content.strip()
+        return {'reply': ai_reply}
+    
+    except Exception as e:
+        print(f"AI Error: {e}")
+        return {'reply': "Sorry, I couldn't connect to the AI right now. Try again in a moment."}, 500
 
 @app.route('/settings', methods=['GET', 'POST'])
 def settings():
