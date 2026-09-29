@@ -3,3 +3,4 @@ gunicorn
 Werkzeug
 razorpay
 python-dotenv
+groq
