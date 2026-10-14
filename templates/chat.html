@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+    .chat-container {
+        max-width: 700px;
+        margin: 40px auto;
+        padding: 20px;
+        height: calc(100vh - 120px);
+        display: flex;
+        flex-direction: column;
+    }
+    .chat-header {
+        background: #151B2B;
+        border: 1px solid rgba(63, 169, 245, 0.15);
+        border-radius: 16px 16px 0 0;
+        padding: 20px 25px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    .chat-header-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid var(--amber-gold);
+    }
+    .chat-header-avatar-init {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--amber-gold), #F5893D);
+        color: var(--near-black);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-family: 'Playfair Display', serif;
+        font-weight: 700;
+        font-size: 1.3rem;
+    }
+    .chat-header-info h2 {
+        font-family: 'Playfair Display', serif;
+        color: var(--off-white);
+        font-size: 1.3rem;
+        margin: 0;
+    }
+    .chat-header-info p {
+        color: #8B92A8;
+        font-size: 0.85rem;
+        margin: 0;
+    }
+    .chat-back {
+        margin-left: auto;
+        color: #8B92A8;
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: 0.3s;
+    }
+    .chat-back:hover { color: var(--amber-gold); }
+
+    .chat-messages {
+        flex: 1;
+        background: #0B0F19;
+        border-left: 1px solid rgba(63, 169, 245, 0.15);
+        border-right: 1px solid rgba(63, 169, 245, 0.15);
+        padding: 20px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    .msg-bubble {
+        max-width: 70%;
+        padding: 12px 18px;
+        border-radius: 18px;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        word-wrap: break-word;
+    }
+    .msg-bubble.mine {
+        align-self: flex-end;
+        background: linear-gradient(135deg, var(--amber-gold), #F5893D);
+        color: var(--near-black);
+        border-bottom-right-radius: 4px;
+    }
+    .msg-bubble.theirs {
+        align-self: flex-start;
+        background: #151B2B;
+        color: var(--off-white);
+        border: 1px solid rgba(63, 169, 245, 0.15);
+        border-bottom-left-radius: 4px;
+    }
+    .msg-time {
+        font-size: 0.7rem;
+        opacity: 0.7;
+        margin-top: 4px;
+    }
+
+    .chat-input-bar {
+        background: #151B2B;
+        border: 1px solid rgba(63, 169, 245, 0.15);
+        border-radius: 0 0 16px 16px;
+        padding: 15px 20px;
+        display: flex;
+        gap: 10px;
+    }
+    .chat-input-bar input {
+        flex: 1;
+        padding: 14px 18px;
+        border-radius: 25px;
+        border: 1px solid rgba(63, 169, 245, 0.2);
+        background: #0B0F19;
+        color: var(--off-white);
+        font-family: 'Poppins', sans-serif;
+        font-size: 0.95rem;
+    }
+    .chat-input-bar input:focus {
+        outline: none;
+        border-color: var(--amber-gold);
+    }
+    .chat-input-bar button {
+        padding: 14px 28px;
+        border-radius: 25px;
+        background: var(--amber-gold);
+        color: var(--near-black);
+        border: none;
+        font-weight: 700;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+    .chat-input-bar button:hover {
+        background: #FFCB5D;
+    }
+    .empty-chat {
+        text-align: center;
+        color: #8B92A8;
+        padding: 40px;
+        font-style: italic;
+        margin: auto;
+    }
+</style>
+
+<div class="chat-container">
+    <div class="chat-header">
+        {% if other_user.profile_picture %}
+            <img src="{{ url_for('static', filename='uploads/' + other_user.profile_picture) }}" class="chat-header-avatar">
+        {% else %}
+            <div class="chat-header-avatar-init">{{ other_user.username[0]|upper }}</div>
+        {% endif %}
+        <div class="chat-header-info">
+            <h2>{{ other_user.username }}</h2>
+            <p>
+                {% if other_user.rank == 'Bronze' %}🥉{% elif other_user.rank == 'Silver' %}🥈{% elif other_user.rank == 'Gold' %}🏆{% elif other_user.rank == 'Platinum' %}👑{% endif %}
+                {{ other_user.rank }} · {{ other_user.total_points }} XP
+            </p>
+        </div>
+        <a href="{{ url_for('messages_list') }}" class="chat-back">← Back</a>
+    </div>
+
+    <div class="chat-messages" id="chatMessages">
+        {% if messages %}
+            {% for m in messages %}
+            <div class="msg-bubble {% if m.sender_id == session['user_id'] %}mine{% else %}theirs{% endif %}">
+                {{ m.content }}
+                <div class="msg-time">{{ m.created_at }}</div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-chat">
+                No messages yet. Say hi! 👋
+            </div>
+        {% endif %}
+    </div>
+
+    <form method="POST" class="chat-input-bar">
+        <input type="text" name="content" placeholder="Type a message..." maxlength="1000" required autofocus>
+        <button type="submit">Send →</button>
+    </form>
+</div>
+
+<script>
+    // Auto-scroll to bottom
+    const chat = document.getElementById('chatMessages');
+    chat.scrollTop = chat.scrollHeight;
+</script>
+
+{% endblock %}

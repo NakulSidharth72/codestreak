@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+    .page-container { max-width: 1200px; margin: 80px auto; padding: 20px; }
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
+    .page-title { font-family: 'Playfair Display', serif; font-size: 3rem; color: var(--off-white); margin: 0; }
+    .page-subtitle { color: #8B92A8; font-size: 1rem; margin-top: 10px; }
+    
+    /* LESSON CARDS (No Glow) */
+    .lessons-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
+    .lesson-card {
+        background: #151B2B;
+        border: 1px solid rgba(63, 169, 245, 0.15);
+        border-radius: 16px;
+        padding: 30px;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        color: var(--off-white);
+        position: relative;
+    }
+    .lesson-card:hover {
+        border-color: var(--amber-gold);
+        transform: translateY(-5px);
+    }
+    .lesson-level { color: var(--azure-blue); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 15px; }
+    .lesson-title { font-family: 'Playfair Display', serif; font-size: 1.8rem; margin-bottom: 10px; color: var(--off-white); }
+    .lesson-points { color: var(--amber-gold); font-size: 0.9rem; margin-top: 20px; font-weight: 700; }
+    .lesson-arrow { position: absolute; top: 30px; right: 30px; color: #4A4F63; font-size: 1.5rem; transition: 0.3s; }
+    .lesson-card:hover .lesson-arrow { color: var(--amber-gold); }
+</style>
+
+<div class="page-container">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">📖 Lessons</h1>
+            <p class="page-subtitle">Complete lessons to earn XP and build your streak!</p>
+        </div>
+    </div>
+
+    <div class="lessons-grid">
+        {% for lesson in lessons %}
+        <a href="{{ url_for('lesson', lesson_id=lesson['id']) }}" class="lesson-card">
+            <div class="lesson-level">{{ lesson['level'] }} | {{ lesson['difficulty'] }}</div>
+            <div class="lesson-title">{{ lesson['title'] }}</div>
+            <div class="lesson-points">+{{ lesson['points'] }} XP</div>
+            <div class="lesson-arrow">→</div>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}

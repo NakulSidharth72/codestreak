@@ -1,0 +1,257 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+    .social-container {
+        max-width: 1000px;
+        margin: 80px auto;
+        padding: 20px;
+    }
+    .social-header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+    .social-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 3rem;
+        color: var(--off-white);
+        margin-bottom: 10px;
+    }
+    .social-subtitle { color: #8B92A8; }
+
+    .social-tabs {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        margin-bottom: 40px;
+        flex-wrap: wrap;
+    }
+    .social-tab {
+        padding: 14px 32px;
+        border-radius: 12px;
+        background: #151B2B;
+        border: 1px solid rgba(63, 169, 245, 0.2);
+        color: #B8B3D1;
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: 0.3s;
+        text-decoration: none;
+        position: relative;
+    }
+    .social-tab:hover { border-color: var(--amber-gold); color: var(--amber-gold); }
+    .social-tab.active {
+        background: rgba(245, 185, 66, 0.1);
+        border-color: var(--amber-gold);
+        color: var(--amber-gold);
+    }
+    .tab-count {
+        display: inline-block;
+        background: rgba(63, 169, 245, 0.15);
+        color: var(--azure-blue);
+        padding: 2px 10px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        margin-left: 8px;
+    }
+    .tab-count.unread {
+        background: #E84A6B;
+        color: white;
+    }
+
+    .social-panel { display: none; }
+    .social-panel.active { display: block; }
+
+    .user-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 15px;
+    }
+    .user-row {
+        background: #151B2B;
+        border: 1px solid rgba(63, 169, 245, 0.15);
+        border-radius: 14px;
+        padding: 18px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        transition: 0.3s;
+    }
+    .user-row:hover {
+        border-color: rgba(245, 185, 66, 0.4);
+        transform: translateY(-2px);
+    }
+    .user-row-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid rgba(245, 185, 66, 0.4);
+        flex-shrink: 0;
+    }
+    .user-row-avatar-init {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--amber-gold), #F5893D);
+        color: var(--near-black);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-family: 'Playfair Display', serif;
+        font-weight: 700;
+        font-size: 1.3rem;
+        flex-shrink: 0;
+        border: 2px solid rgba(245, 185, 66, 0.4);
+    }
+    .user-row-info { flex: 1; min-width: 0; }
+    .user-row-name {
+        color: var(--off-white);
+        font-weight: 700;
+        font-size: 1rem;
+        margin-bottom: 4px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .user-row-rank {
+        color: var(--amber-gold);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    .user-row-actions {
+        display: flex;
+        gap: 8px;
+        flex-shrink: 0;
+    }
+    .action-btn {
+        padding: 8px 14px;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+        border: none;
+        transition: 0.3s;
+        white-space: nowrap;
+    }
+    .btn-message {
+        background: var(--amber-gold);
+        color: var(--near-black);
+    }
+    .btn-message:hover { background: #FFCB5D; }
+    .btn-unfollow-small {
+        background: transparent;
+        color: #E84A6B;
+        border: 1px solid rgba(232, 74, 107, 0.4);
+    }
+    .btn-unfollow-small:hover { background: rgba(232, 74, 107, 0.1); }
+
+    .empty-social {
+        text-align: center;
+        padding: 60px 20px;
+        color: #8B92A8;
+        font-style: italic;
+    }
+    .empty-social a { color: var(--amber-gold); text-decoration: none; }
+</style>
+
+<div class="social-container">
+    <div class="social-header">
+        <h1 class="social-title">👥 Friends & Messages</h1>
+        <p class="social-subtitle">See your network and chat with other learners</p>
+    </div>
+
+    <div class="social-tabs">
+        <a href="#followers" class="social-tab active" onclick="showTab('followers', this)">
+            Followers <span class="tab-count">{{ followers|length }}</span>
+        </a>
+        <a href="#following" class="social-tab" onclick="showTab('following', this)">
+            Following <span class="tab-count">{{ following|length }}</span>
+        </a>
+        <a href="{{ url_for('messages_list') }}" class="social-tab">
+            Messages
+            {% if unread_count > 0 %}
+                <span class="tab-count unread">{{ unread_count }}</span>
+            {% endif %}
+        </a>
+    </div>
+
+    <!-- FOLLOWERS PANEL -->
+    <div class="social-panel active" id="panel-followers">
+        {% if followers %}
+            <div class="user-list">
+                {% for u in followers %}
+                <div class="user-row">
+                    {% if u['profile_picture'] %}
+                        <img src="{{ url_for('static', filename='uploads/' + u['profile_picture']) }}" class="user-row-avatar">
+                    {% else %}
+                        <div class="user-row-avatar-init">{{ u['username'][0]|upper }}</div>
+                    {% endif %}
+                    <div class="user-row-info">
+                        <div class="user-row-name">{{ u['username'] }}</div>
+                        <div class="user-row-rank">
+                            {% if u['rank'] == 'Bronze' %}🥉{% elif u['rank'] == 'Silver' %}🥈{% elif u['rank'] == 'Gold' %}🏆{% elif u['rank'] == 'Platinum' %}👑{% endif %}
+                            {{ u['rank'] }}
+                        </div>
+                    </div>
+                    <div class="user-row-actions">
+                        <a href="{{ url_for('chat', username=u['username']) }}" class="action-btn btn-message">Message</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-social">
+                No followers yet.<br>
+                <a href="{{ url_for('users_directory') }}">Find people to follow →</a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- FOLLOWING PANEL -->
+    <div class="social-panel" id="panel-following">
+        {% if following %}
+            <div class="user-list">
+                {% for u in following %}
+                <div class="user-row">
+                    {% if u['profile_picture'] %}
+                        <img src="{{ url_for('static', filename='uploads/' + u['profile_picture']) }}" class="user-row-avatar">
+                    {% else %}
+                        <div class="user-row-avatar-init">{{ u['username'][0]|upper }}</div>
+                    {% endif %}
+                    <div class="user-row-info">
+                        <div class="user-row-name">{{ u['username'] }}</div>
+                        <div class="user-row-rank">
+                            {% if u['rank'] == 'Bronze' %}🥉{% elif u['rank'] == 'Silver' %}🥈{% elif u['rank'] == 'Gold' %}🏆{% elif u['rank'] == 'Platinum' %}👑{% endif %}
+                            {{ u['rank'] }}
+                        </div>
+                    </div>
+                    <div class="user-row-actions">
+                        <a href="{{ url_for('chat', username=u['username']) }}" class="action-btn btn-message">Message</a>
+                        <a href="{{ url_for('unfollow_user', user_id=u['id']) }}" class="action-btn btn-unfollow-small">Unfollow</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-social">
+                You're not following anyone yet.<br>
+                <a href="{{ url_for('users_directory') }}">Discover people →</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    function showTab(tabName, el) {
+        event.preventDefault();
+        document.querySelectorAll('.social-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.social-panel').forEach(p => p.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById('panel-' + tabName).classList.add('active');
+    }
+</script>
+
+{% endblock %}

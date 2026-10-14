@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+    .page-container {
+        max-width: 900px;
+        margin: 80px auto;
+        padding: 20px;
+    }
+    .page-header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+    .page-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 2.5rem;
+        color: var(--amber-gold);
+        margin-bottom: 10px;
+    }
+
+    .leaderboard-table {
+        background: #151B2B;
+        border: 1px solid rgba(63, 169, 245, 0.2);
+        border-radius: 20px;
+        padding: 30px 40px;
+        box-shadow:
+            0 0 0 1px rgba(245, 185, 66, 0.1),
+            0 0 40px rgba(245, 185, 66, 0.08);
+    }
+
+    .lb-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .lb-table th {
+        color: var(--amber-gold);
+        text-align: left;
+        font-size: 0.95rem;
+        font-weight: 700;
+        padding: 12px 15px;
+        border-bottom: 2px solid rgba(63, 169, 245, 0.3);
+    }
+
+    .lb-table td {
+        padding: 16px 15px;
+        color: var(--off-white);
+        border-bottom: 1px solid rgba(63, 169, 245, 0.1);
+    }
+
+    .lb-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    /* Avatar + Name combo */
+    .lb-user-cell {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .lb-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid rgba(245, 185, 66, 0.4);
+        flex-shrink: 0;
+    }
+
+    .lb-avatar-initial {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--amber-gold), #F5893D);
+        color: var(--near-black);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-family: 'Playfair Display', serif;
+        font-weight: 700;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+        border: 2px solid rgba(245, 185, 66, 0.4);
+    }
+
+    .lb-tier-cell {
+        font-weight: 700;
+        font-size: 0.95rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: all 0.3s ease;
+    }
+
+    /* Tier-specific glow */
+    .lb-tier-cell.bronze {
+        color: #C8823C;
+        text-shadow: 0 0 10px rgba(200, 130, 60, 0.8), 0 0 20px rgba(200, 130, 60, 0.4);
+    }
+    .lb-tier-cell.silver {
+        color: #D0D5DD;
+        text-shadow: 0 0 10px rgba(208, 213, 221, 0.8), 0 0 20px rgba(208, 213, 221, 0.4);
+    }
+    .lb-tier-cell.gold {
+        color: #F5B942;
+        text-shadow: 0 0 10px rgba(245, 185, 66, 0.9), 0 0 20px rgba(245, 185, 66, 0.5);
+    }
+    .lb-tier-cell.platinum {
+        color: #B888E8;
+        text-shadow: 0 0 10px rgba(184, 136, 232, 0.9), 0 0 20px rgba(184, 136, 232, 0.5);
+    }
+
+    .empty-state {
+        text-align: center;
+        color: #8B92A8;
+        padding: 40px 20px;
+        font-style: italic;
+    }
+</style>
+
+<div class="page-container">
+    <div class="page-header">
+        <h1 class="page-title">🏆 Weekly Leaderboard</h1>
+    </div>
+
+    <div class="leaderboard-table">
+        {% if users %}
+        <table class="lb-table">
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>User</th>
+                    <th>Points</th>
+                    <th>Tier</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>
+                        <div class="lb-user-cell">
+                            {% if u['profile_picture'] %}
+                                <img src="{{ url_for('static', filename='uploads/' + u['profile_picture']) }}" 
+                                     alt="{{ u['username'] }}" 
+                                     class="lb-avatar">
+                            {% else %}
+                                <div class="lb-avatar-initial">{{ u['username'][0]|upper }}</div>
+                            {% endif %}
+                            <span>{{ u['username'] }}</span>
+                        </div>
+                    </td>
+                    <td>{{ u['weekly_points'] }}</td>
+                    <td class="lb-tier-cell {{ u['rank']|lower }}">
+                        {% if u['rank'] == 'Bronze' %}🥉
+                        {% elif u['rank'] == 'Silver' %}🥈
+                        {% elif u['rank'] == 'Gold' %}🏆
+                        {% elif u['rank'] == 'Platinum' %}👑
+                        {% endif %}
+                        {{ u['rank'] }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            No players yet. Be the first to complete a lesson! 🚀
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

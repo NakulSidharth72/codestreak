@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block content %}
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<div class="card" style="text-align:center;">
+    <h2>Processing Payment...</h2>
+    <p>Redirecting you to secure Razorpay checkout.</p>
+</div>
+<script>
+    var options = {
+        "key": "{{ key_id }}",
+        "amount": "{{ amount }}",
+        "currency": "{{ currency }}",
+        "name": "CodeStreak",
+        "description": "Premium Subscription",
+        "order_id": "{{ order_id }}",
+        "handler": function (response){
+            var form = document.createElement("form");
+            form.setAttribute("method", "POST");
+            form.setAttribute("action", "/payment/success");
+            
+            var paymentId = document.createElement("input");
+            paymentId.setAttribute("type", "hidden");
+            paymentId.setAttribute("name", "razorpay_payment_id");
+            paymentId.setAttribute("value", response.razorpay_payment_id);
+            form.appendChild(paymentId);
+            
+            document.body.appendChild(form);
+            form.submit();
+        },
+        "theme": {
+            "color": "#0D3A35"
+        }
+    };
+    var rzp1 = new Razorpay(options);
+    rzp1.open();
+</script>
+{% endblock %}

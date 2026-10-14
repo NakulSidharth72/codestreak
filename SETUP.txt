@@ -1,0 +1,32 @@
+=====================================
+CODESTREAK - SETUP INSTRUCTIONS
+=====================================
+
+REQUIREMENTS:
+- Python 3.8 or higher
+- That's it! (SQLite is built into Python)
+
+STEPS:
+1. Copy the "codestreak" folder to the school PC (Desktop is fine).
+2. Open Command Prompt (search "cmd" in Windows).
+3. Navigate to the folder:
+   cd C:\Users\YourName\Desktop\codestreak
+   
+   (Or: right-click the folder → "Open in Terminal" if available)
+
+4. Install the required Python packages:
+   pip install -r requirements.txt
+
+5. Run the app:
+   python app.py
+
+6. Open your browser and go to:
+   http://127.0.0.1:5000
+
+DEMO LOGIN CREDENTIALS (optional):
+- Username: Nakul
+- Password: (whatever you set)
+
+If anything breaks, refer to the README.md file.
+
+=====================================
