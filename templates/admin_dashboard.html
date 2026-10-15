@@ -1,13 +1,149 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div style="max-width: 1000px; margin: 40px auto; padding: 20px; text-align: center;">
-    <h1 style="color: #E3C69C; font-family: 'Playfair Display', serif;">Admin Control Panel</h1>
-    <p style="color: #E8EBF2;">Welcome, Nakul. The database is connected and you are logged in as an admin.</p>
+<div style="max-width: 1200px; margin: 40px auto; padding: 20px;">
+    <h1 style="color: #E3C69C; font-family: 'Playfair Display', serif; text-align: center;">Admin Control Panel</h1>
     
-    <div style="margin-top: 30px; padding: 20px; background: #151B2B; border: 1px solid #F5B942; border-radius: 12px;">
-        <h3 style="color: #F5B942;">🛠️ Admin Features Coming Soon</h3>
-        <p style="color: #8B92A8;">User management, analytics, and logs will appear here.</p>
+    <!-- Stats Row -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">
+        <div style="background: #151B2B; padding: 20px; border-radius: 12px; border: 1px solid #F5B942; text-align: center;">
+            <h3 style="color: #F5B942; margin: 0; font-size: 2rem;">{{ total_users }}</h3>
+            <p style="color: #8B92A8; margin: 5px 0 0 0;">Total Active Users</p>
+        </div>
+        <div style="background: #151B2B; padding: 20px; border-radius: 12px; border: 1px solid #3FA9F5; text-align: center;">
+            <h3 style="color: #3FA9F5; margin: 0; font-size: 2rem;">{{ dau }}</h3>
+            <p style="color: #8B92A8; margin: 5px 0 0 0;">Daily Active Users (Today)</p>
+        </div>
+    </div>
+
+    <!-- User Management Section -->
+    <div style="background: #151B2B; padding: 20px; border-radius: 12px; margin-bottom: 30px; border: 1px solid #2a3a2e;">
+        <h2 style="color: #E8EBF2; margin-top: 0;">User Management</h2>
+        <input type="text" id="userSearch" onkeyup="filterUsers()" placeholder="Search by username or email..." style="width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #3FA9F5; background: #0B0F19; color: #E8EBF2;">
+        
+        <table id="userTable" style="width: 100%; border-collapse: collapse; color: #E8EBF2;">
+            <thead>
+                <tr style="background: #1E2538; text-align: left;">
+                    <th style="padding: 12px;">Username</th>
+                    <th style="padding: 12px;">Email</th>
+                    <th style="padding: 12px;">XP</th>
+                    <th style="padding: 12px;">Streak</th>
+                    <th style="padding: 12px;">Status</th>
+                    <th style="padding: 12px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr style="border-bottom: 1px solid #1E2538;">
+                    <td style="padding: 12px; font-weight: bold;">{{ user.username }}</td>
+                    <td style="padding: 12px; color: #8B92A8;">{{ user.email }}</td>
+                    <td style="padding: 12px; color: #F5B942;">{{ user.total_points }}</td>
+                    <td style="padding: 12px;">{{ user.streak }} 🔥</td>
+                    <td style="padding: 12px;">
+                        {% if user.is_active %}
+                            <span style="color: #2ED9A5;">Active</span>
+                        {% else %}
+                            <span style="color: #FF6B6B;">Deactivated</span>
+                        {% endif %}
+                        {% if user.is_admin %}<span style="color: #E3C69C; margin-left: 5px;">(Admin)</span>{% endif %}
+                    </td>
+                    <td style="padding: 12px;">
+                        <!-- Grant XP -->
+                        <form action="{{ url_for('admin_user_action', user_id=user.id, action='add_xp') }}" method="POST" style="display:inline;">
+                            <input type="number" name="amount" value="50" style="width: 50px; padding: 3px; background: #0B0F19; color: white; border: 1px solid #3FA9F5; border-radius: 4px;">
+                            <button type="submit" style="background: #F5B942; color: #000; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-weight: bold;">+XP</button>
+                        </form>
+
+                        <!-- Reset Streak -->
+                        <form action="{{ url_for('admin_user_action', user_id=user.id, action='reset_streak') }}" method="POST" style="display:inline;">
+                            <button type="submit" style="background: #FF6B6B; color: #fff; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-weight: bold;" onclick="return confirm('Reset streak for {{ user.username }}?');">Reset Streak</button>
+                        </form>
+                        
+                        <!-- Toggle Active -->
+                        <form action="{{ url_for('admin_user_action', user_id=user.id, action='toggle_active') }}" method="POST" style="display:inline;">
+                            <button type="submit" style="background: #3FA9F5; color: #000; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                                {{ 'Deactivate' if user.is_active else 'Activate' }}
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
+
+    <!-- Analytics Charts -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">
+        <div style="background: #151B2B; padding: 20px; border-radius: 12px; border: 1px solid #2a3a2e;">
+            <h3 style="color: #F5B942; margin-top: 0;">Streak Distribution</h3>
+            <canvas id="streakChart"></canvas>
+        </div>
+        <div style="background: #151B2B; padding: 20px; border-radius: 12px; border: 1px solid #2a3a2e;">
+            <h3 style="color: #3FA9F5; margin-top: 0;">Daily Active Users (Last 7 Days)</h3>
+            <canvas id="dauChart"></canvas>
+        </div>
+    </div>
+
+<script>
+function filterUsers() {
+    let input = document.getElementById("userSearch").value.toLowerCase();
+    let rows = document.getElementById("userTable").getElementsByTagName("tr");
+    for (let i = 1; i < rows.length; i++) {
+        let text = rows[i].innerText.toLowerCase();
+        rows[i].style.display = text.includes(input) ? "" : "none";
+    }
+}
+</script>
 {% endblock %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // 1. Streak Distribution Bar Chart
+    const streakCtx = document.getElementById('streakChart').getContext('2d');
+    new Chart(streakCtx, {
+        type: 'bar',
+        data: {
+            labels: ['1-6 Days', '7-29 Days', '30+ Days'],
+            datasets: [{
+                label: 'Users',
+                data: [{{ streak_1_6 }}, {{ streak_7_29 }}, {{ streak_30_plus }}],
+                backgroundColor: ['#F5B942', '#3FA9F5', '#2ED9A5'],
+                borderRadius: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { ticks: { color: '#E8EBF2' }, grid: { color: '#1E2538' } },
+                x: { ticks: { color: '#E8EBF2' }, grid: { display: false } }
+            }
+        }
+    });
+
+    // 2. Daily Active Users Line Chart
+    const dauCtx = document.getElementById('dauChart').getContext('2d');
+    new Chart(dauCtx, {
+        type: 'line',
+        data: {
+            labels: {{ dau_labels | tojson }},
+            datasets: [{
+                label: 'Active Users',
+                data: {{ dau_counts | tojson }},
+                borderColor: '#3FA9F5',
+                backgroundColor: 'rgba(63, 169, 245, 0.2)',
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { ticks: { color: '#E8EBF2' }, grid: { color: '#1E2538' } },
+                x: { ticks: { color: '#E8EBF2' }, grid: { display: false } }
+            }
+        }
+    });
+</script>

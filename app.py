@@ -187,7 +187,7 @@ def update_streak(user_id):
     cur.close()
     conn.close()
     return new_streak
-
+    
 # --- ROUTES ---
 
 @app.route('/')
@@ -1320,8 +1320,114 @@ def admin_required(f):
 @app.route('/admin')
 @admin_required
 def admin_dashboard():
-    # This is a placeholder so the link works. We will add the tables later.
-    return render_template('admin_dashboard.html')
+    conn = get_db()
+    cur = conn.cursor()
+    
+    # 1. Total Users
+    cur.execute("SELECT COUNT(*) as count FROM users WHERE is_active = 1")
+    total_users = cur.fetchone()['count']
+    
+    # 2. Daily Active Users (Today)
+    cur.execute("SELECT COUNT(DISTINCT user_id) as count FROM progress WHERE DATE(completed_at) = DATE('now')")
+    dau = cur.fetchone()['count']
+    
+    # 3. Streak Distribution Data (THIS WAS MISSING!)
+    cur.execute("SELECT COUNT(*) as count FROM users WHERE streak BETWEEN 1 AND 6")
+    streak_1_6 = cur.fetchone()['count']
+    
+    cur.execute("SELECT COUNT(*) as count FROM users WHERE streak BETWEEN 7 AND 29")
+    streak_7_29 = cur.fetchone()['count']
+    
+    cur.execute("SELECT COUNT(*) as count FROM users WHERE streak >= 30")
+    streak_30_plus = cur.fetchone()['count']
+
+    # 4. Daily Active Users (Last 7 Days) for the Line Chart
+    cur.execute("""
+        SELECT DATE(completed_at) as day, COUNT(DISTINCT user_id) as count
+        FROM progress
+        WHERE completed_at >= datetime('now', '-7 days')
+        GROUP BY DATE(completed_at)
+        ORDER BY day ASC
+    """)
+    dau_data = cur.fetchall()
+    dau_labels = [row['day'] for row in dau_data]
+    dau_counts = [row['count'] for row in dau_data]
+    
+    # 5. All users for the management table
+    cur.execute("SELECT * FROM users ORDER BY id DESC")
+    users = cur.fetchall()
+    
+    # 6. Recent Admin Logs
+    cur.execute("""
+        SELECT a.*, u.username as admin_name, t.username as target_name 
+        FROM admin_logs a
+        JOIN users u ON a.admin_id = u.id
+        LEFT JOIN users t ON a.target_user_id = t.id
+        ORDER BY a.created_at DESC LIMIT 10
+    """)
+    logs = cur.fetchall()
+    
+    cur.close()
+    conn.close()
+    
+    # 7. Send everything to the HTML
+    return render_template('admin_dashboard.html', 
+                           users=users, logs=logs,
+                           total_users=total_users, dau=dau,
+                           streak_1_6=streak_1_6, streak_7_29=streak_7_29, 
+                           streak_30_plus=streak_30_plus,
+                           dau_labels=dau_labels, dau_counts=dau_counts)
+
+@app.route('/admin/user_action/<int:user_id>/<action>', methods=['POST'])
+@admin_required
+def admin_user_action(user_id, action):
+    conn = get_db()
+    cur = conn.cursor()
+    try:
+        cur.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+        user = cur.fetchone()
+        if not user:
+            flash('User not found.', 'danger')
+            return redirect(url_for('admin_dashboard'))
+            
+        admin_id = session['user_id']
+        details = ""
+        
+        if action == 'reset_streak':
+            cur.execute("UPDATE users SET streak = 0 WHERE id = ?", (user_id,))
+            details = "Streak reset to 0"
+            flash(f'Streak reset for {user["username"]}.', 'success')
+            
+        elif action == 'add_xp':
+            amount = int(request.form.get('amount', 50))
+            cur.execute("UPDATE users SET total_points = total_points + ?, weekly_points = weekly_points + ? WHERE id = ?", (amount, amount, user_id))
+            details = f"Granted {amount} XP"
+            flash(f'Granted {amount} XP to {user["username"]}.', 'success')
+            
+        elif action == 'toggle_active':
+            new_status = 0 if user['is_active'] else 1
+            cur.execute("UPDATE users SET is_active = ? WHERE id = ?", (new_status, user_id))
+            details = f"Account set to {'Active' if new_status else 'Deactivated'}"
+            flash(f'Account status updated for {user["username"]}.', 'success')
+        
+        # Log the action in the SAME transaction
+        cur.execute(
+            "INSERT INTO admin_logs (admin_id, action, target_user_id, details) VALUES (?, ?, ?, ?)",
+            (admin_id, action, user_id, details)
+        )
+        
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        print(f"Admin Action Error: {e}")
+        flash(f'Error: {str(e)}', 'danger')
+    finally:
+        # ALWAYS close the connection, even if an error happens
+        cur.close()
+        conn.close()
+        
+    return redirect(url_for('admin_dashboard'))
+
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
