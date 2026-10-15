@@ -65,9 +65,12 @@
                                 {{ 'Deactivate' if user.is_active else 'Activate' }}
                             </button>
                         </form>
-                                                <!-- Delete Account -->
-                        <form action="{{ url_for('admin_user_action', user_id=user.id, action='delete') }}" method="POST" style="display:inline;">
-                            <button type="submit" style="background: #dc3545; color: #fff; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-left: 5px;" onclick="return confirm('⚠️ WARNING: Are you sure you want to PERMANENTLY delete {{ user.username }}? This will erase all their XP, streaks, and messages. This cannot be undone.');">
+                        <!-- Delete Account Form -->
+                        <form id="delete-form-{{ user.id }}" action="{{ url_for('admin_user_action', user_id=user.id, action='delete') }}" method="POST" style="display:inline;">
+                            <button type="button" class="delete-btn" 
+                                    data-username="{{ user.username }}" 
+                                    data-form-id="delete-form-{{ user.id }}"
+                                    style="background: #dc3545; color: #fff; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-left: 5px;">
                                 Delete
                             </button>
                         </form>
@@ -101,6 +104,72 @@ function filterUsers() {
     }
 }
 </script>
+<!-- Custom Delete Confirmation Modal -->
+<div id="deleteModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(11, 15, 25, 0.8); backdrop-filter: blur(5px); z-index: 9999; justify-content: center; align-items: center;">
+    <div style="background: #151B2B; border: 1px solid #F5B942; border-radius: 16px; padding: 30px; max-width: 450px; width: 90%; text-align: center; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);">
+        <div style="font-size: 3rem; margin-bottom: 10px;">⚠️</div>
+        <h2 style="color: #F5B942; margin-top: 0; font-family: 'Playfair Display', serif;">Warning!</h2>
+        <p style="color: #E8EBF2; font-size: 1.1rem; line-height: 1.6;">
+            Are you sure you want to <strong style="color: #FF6B6B;">PERMANENTLY delete</strong> 
+            <span id="deleteUsername" style="color: #F5B942; font-weight: bold;"></span>?
+        </p>
+        <p style="color: #8B92A8; font-size: 0.9rem; margin-bottom: 25px;">
+            This will erase all their XP, streaks, messages, and progress. This action cannot be undone.
+        </p>
+        <div style="display: flex; gap: 15px; justify-content: center;">
+            <button id="cancelDelete" style="background: #1E2538; color: #E8EBF2; border: 1px solid #3FA9F5; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1rem; transition: 0.3s;">
+                Cancel
+            </button>
+            <button id="confirmDelete" style="background: #dc3545; color: #fff; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1rem; transition: 0.3s;">
+                Yes, Delete Account
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const modal = document.getElementById('deleteModal');
+        const deleteUsernameSpan = document.getElementById('deleteUsername');
+        const cancelBtn = document.getElementById('cancelDelete');
+        const confirmBtn = document.getElementById('confirmDelete');
+        let formToSubmit = null;
+
+        // 1. Open the modal when a delete button is clicked
+        document.querySelectorAll('.delete-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const username = this.getAttribute('data-username');
+                const formId = this.getAttribute('data-form-id');
+                
+                deleteUsernameSpan.textContent = username;
+                formToSubmit = document.getElementById(formId);
+                modal.style.display = 'flex';
+            });
+        });
+
+        // 2. Close the modal if "Cancel" is clicked
+        cancelBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+            formToSubmit = null;
+        });
+
+        // 3. Submit the form if "Yes, Delete Account" is clicked
+        confirmBtn.addEventListener('click', () => {
+            if (formToSubmit) {
+                formToSubmit.submit();
+            }
+        });
+
+        // 4. Close the modal if the user clicks outside the box
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+                formToSubmit = null;
+            }
+        });
+    });
+</script>
+
 {% endblock %}
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
