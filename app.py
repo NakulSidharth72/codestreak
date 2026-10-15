@@ -1409,6 +1409,25 @@ def admin_user_action(user_id, action):
             cur.execute("UPDATE users SET is_active = ? WHERE id = ?", (new_status, user_id))
             details = f"Account set to {'Active' if new_status else 'Deactivated'}"
             flash(f'Account status updated for {user["username"]}.', 'success')
+            
+        elif action == 'delete':
+        # Prevent admin from deleting their own account
+            if user_id == admin_id:
+                flash('You cannot delete your own admin account!', 'danger')
+                return redirect(url_for('admin_dashboard'))
+        
+        # Delete all related data first (Cascade Delete)
+            cur.execute("DELETE FROM progress WHERE user_id = ?", (user_id,))
+            cur.execute("DELETE FROM activity WHERE user_id = ?", (user_id,))
+            cur.execute("DELETE FROM follows WHERE follower_id = ? OR following_id = ?", (user_id, user_id))
+            cur.execute("DELETE FROM messages WHERE sender_id = ? OR receiver_id = ?", (user_id, user_id))
+            cur.execute("DELETE FROM payments WHERE user_id = ?", (user_id,))
+        
+        # Now delete the user
+            cur.execute("DELETE FROM users WHERE id = ?", (user_id,))
+        
+            details = f"Deleted account for {user['username']}"
+            flash(f'Account permanently deleted for {user["username"]}.', 'success')
         
         # Log the action in the SAME transaction
         cur.execute(

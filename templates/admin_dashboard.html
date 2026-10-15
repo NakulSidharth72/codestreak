@@ -65,6 +65,12 @@
                                 {{ 'Deactivate' if user.is_active else 'Activate' }}
                             </button>
                         </form>
+                                                <!-- Delete Account -->
+                        <form action="{{ url_for('admin_user_action', user_id=user.id, action='delete') }}" method="POST" style="display:inline;">
+                            <button type="submit" style="background: #dc3545; color: #fff; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-left: 5px;" onclick="return confirm('⚠️ WARNING: Are you sure you want to PERMANENTLY delete {{ user.username }}? This will erase all their XP, streaks, and messages. This cannot be undone.');">
+                                Delete
+                            </button>
+                        </form>
                     </td>
                 </tr>
                 {% endfor %}
