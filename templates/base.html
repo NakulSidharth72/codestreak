@@ -101,6 +101,13 @@
         .card h2 { color: var(--azure-blue); margin-bottom: 15px; font-family: 'Playfair Display', serif; }
         
         /* ================= MASCOT ================= */
+
+                .robot-mascot:hover {
+            filter: drop-shadow(0 0 15px rgba(245, 185, 66, 0.8)) drop-shadow(0 20px 25px rgba(0, 0, 0, 0.6));
+            transform: scale(1.05);
+            transition: all 0.3s ease;
+        }
+
         .mascot-container { position: fixed; bottom: 20px; right: 20px; z-index: 100; display: flex; align-items: flex-end; gap: 15px; }
         .speech-bubble {
             background: linear-gradient(135deg, var(--azure-blue), #2E8FD5);
@@ -266,11 +273,6 @@
     {% endwith %}
 
     {% block content %}{% endblock %}
-
-    <!-- ================= AI CHAT WIDGET ================= -->
-    <button class="ai-fab" id="aiFab" title="Ask the AI tutor">
-        <span class="ai-fab-icon">🤖</span>
-    </button>
 
     <div class="ai-chat-panel" id="aiChatPanel">
         <div class="ai-chat-header">
@@ -476,7 +478,6 @@
     <script>
     // ================= AI CHAT WIDGET =================
     (function() {
-        const fab = document.getElementById('aiFab');
         const panel = document.getElementById('aiChatPanel');
         const closeBtn = document.getElementById('aiChatClose');
         const form = document.getElementById('aiChatForm');
@@ -484,20 +485,18 @@
         const messages = document.getElementById('aiChatMessages');
         const sendBtn = document.getElementById('aiSendBtn');
 
-        if (!fab || !panel) return;
+        if (!panel || !form) return; // Stop if the panel doesn't exist
 
-        fab.addEventListener('click', () => {
-            panel.classList.toggle('open');
-            if (panel.classList.contains('open')) input.focus();
-        });
-
+        // Close button logic
         closeBtn.addEventListener('click', () => panel.classList.remove('open'));
 
+        // Suggestion chip logic
         window.askAI = function(text) {
             input.value = text;
             form.dispatchEvent(new Event('submit'));
         };
 
+        // Form submission logic
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const message = input.value.trim();
@@ -512,7 +511,7 @@
             input.value = '';
             sendBtn.disabled = true;
 
-            // Add "typing" indicator
+            // Add "thinking" indicator
             const typing = document.createElement('div');
             typing.className = 'ai-msg ai-msg-bot';
             typing.id = 'aiTypingIndicator';
@@ -589,9 +588,20 @@
             typeMessage(messages[messageIndex]);
         }, 15000);
         
-        document.getElementById('robotMascot').addEventListener('click', () => {
-            const index = Math.floor(Math.random() * messages.length);
-            typeMessage(messages[index]);
+                document.getElementById('robotMascot').addEventListener('click', () => {
+            // 1. Hide the speech bubble if it's showing
+            speechBubble.style.display = 'none';
+            
+            // 2. Toggle the AI Chat Panel
+            const panel = document.getElementById('aiChatPanel');
+            const input = document.getElementById('aiInput');
+            
+            if (panel && input) {
+                panel.classList.toggle('open');
+                if (panel.classList.contains('open')) {
+                    input.focus();
+                }
+            }
         });
     </script>
 <!-- Toast Container -->
