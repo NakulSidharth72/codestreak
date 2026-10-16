@@ -2,7 +2,7 @@
 {% block content %}
 
 <!-- ================= GLOW CURSOR (Landing Page Only) ================= -->
- 
+
 <style>
     :root {
         --near-black: #0B0F19;
@@ -1191,4 +1191,62 @@ window.addEventListener('load', function() {
 });
 </script>
 
+{% endblock %}
+{% block extra_scripts %}
+<!-- ================= CURSOR MECHANICAL TRAIL CSS ================= -->
+<style>
+    .cursor-particle {
+        position: fixed;
+        pointer-events: none;
+        z-index: 99999;
+        transform: translate(-50%, -50%); 
+        opacity: 1;
+        animation: particleFade 1s ease-out forwards;
+        will-change: transform, opacity;
+    }
+    @keyframes particleFade {
+        0% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+        100% { opacity: 0; transform: translate(-50%, -50%) scale(0.3) translateY(30px) rotate(45deg); }
+    }
+</style>
+
+<!-- ================= CURSOR MECHANICAL TRAIL JS ================= -->
+<script>
+    (function() {
+        const icons = ['⚙️', '📖', '🛠️', '💻', '✨', '🔌', '🏎', '📕']; 
+        let lastX = 0, lastY = 0;
+        let particleCount = 0;
+        const MAX_PARTICLES = 25;
+
+        document.addEventListener('mousemove', (e) => {
+            const distance = Math.hypot(e.clientX - lastX, e.clientY - lastY);
+            if (distance < 20) return; 
+            
+            lastX = e.clientX;
+            lastY = e.clientY;
+
+            if (particleCount >= MAX_PARTICLES) return;
+            particleCount++;
+
+            const particle = document.createElement('div');
+            particle.className = 'cursor-particle';
+            
+            const icon = icons[Math.floor(Math.random() * icons.length)];
+            particle.textContent = icon;
+            
+            const size = Math.random() * 10 + 12; 
+            particle.style.fontSize = `${size}px`;
+            
+            particle.style.left = `${e.clientX}px`;
+            particle.style.top = `${e.clientY}px`;
+            
+            document.body.appendChild(particle);
+
+            setTimeout(() => {
+                particle.remove();
+                particleCount--;
+            }, 1000);
+        });
+    })();
+</script>
 {% endblock %}
