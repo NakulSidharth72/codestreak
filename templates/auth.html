@@ -233,9 +233,10 @@
             width: 50px;
             height: 50px;
             border-radius: 50%;
-            background: var(--deep-emerald); /* Solid emerald background */
-            border: 2px solid var(--champagne); /* Champagne border for contrast */
-            color: var(--champagne); /* Champagne 'X' icon */
+            /* Default state (Login page - over Emerald) */
+            background: var(--deep-emerald); 
+            border: 2px solid var(--deep-emerald); 
+            color: var(--pearl-white); 
             display: flex;
             justify-content: center;
             align-items: center;
@@ -244,16 +245,28 @@
             text-decoration: none;
             z-index: 9999;
             transition: all 0.3s ease;
-            box-shadow: 0 5px 15px rgba(13, 58, 53, 0.4); /* Soft shadow for depth */
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
             cursor: pointer;
             font-family: 'Poppins', sans-serif;
         }
         .close-auth:hover {
-            background: var(--champagne); /* Inverts to champagne on hover */
-            color: var(--deep-emerald); /* Emerald 'X' on hover */
+            background: var(--champagne);
+            color: var(--deep-emerald);
             border-color: var(--champagne);
             transform: scale(1.1) rotate(90deg);
             box-shadow: 0 0 25px rgba(227, 198, 156, 0.6);
+        }
+
+        /* Register page state (over Beige) */
+        .close-auth.register-mode {
+            background: var(--pearl-white);
+            border: 2px solid var(--deep-emerald);
+            color: var(--deep-emerald);
+        }
+        .close-auth.register-mode:hover {
+            background: var(--deep-emerald);
+            color: var(--pearl-white);
+            border-color: var(--deep-emerald);
         }
 
         /* ================= RESPONSIVE ================= */
@@ -372,13 +385,17 @@
     <script>
         function switchForm(type) {
             const slider = document.getElementById('slider');
+            const closeBtn = document.querySelector('.close-auth'); // Grab the X button
+            
             const flashContainer = document.querySelector('.auth-flash-container');
             if (flashContainer) flashContainer.style.display = 'none';
 
             if (type === 'signup') {
                 slider.classList.add('signup');
+                closeBtn.classList.add('register-mode'); // Switch X to white background
             } else {
                 slider.classList.remove('signup');
+                closeBtn.classList.remove('register-mode'); // Switch X back to emerald
             }
         }
 
