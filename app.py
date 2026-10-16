@@ -1409,7 +1409,15 @@ def admin_user_action(user_id, action):
             cur.execute("UPDATE users SET is_active = ? WHERE id = ?", (new_status, user_id))
             details = f"Account set to {'Active' if new_status else 'Deactivated'}"
             flash(f'Account status updated for {user["username"]}.', 'success')
-            
+        
+        elif action == 'change_tier':
+            new_tier = request.form.get('tier')
+            if new_tier in ['Bronze', 'Silver', 'Gold', 'Platinum']:
+                # Use backticks around `rank` because it's a reserved keyword in SQL
+                cur.execute("UPDATE users SET `rank` = ? WHERE id = ?", (new_tier, user_id))
+                details = f"Changed tier to {new_tier}"
+                flash(f'Tier changed to {new_tier} for {user["username"]}.', 'success')
+        
         elif action == 'delete':
         # Prevent admin from deleting their own account
             if user_id == admin_id:

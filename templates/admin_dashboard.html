@@ -28,6 +28,7 @@
                     <th style="padding: 12px;">Email</th>
                     <th style="padding: 12px;">XP</th>
                     <th style="padding: 12px;">Streak</th>
+                    <th style="padding: 12px;">Tier</th>
                     <th style="padding: 12px;">Status</th>
                     <th style="padding: 12px;">Actions</th>
                 </tr>
@@ -39,6 +40,16 @@
                     <td style="padding: 12px; color: #8B92A8;">{{ user.email }}</td>
                     <td style="padding: 12px; color: #F5B942;">{{ user.total_points }}</td>
                     <td style="padding: 12px;">{{ user.streak }} 🔥</td>
+                    <td style="padding: 12px;">
+                        <form action="{{ url_for('admin_user_action', user_id=user.id, action='change_tier') }}" method="POST" style="margin: 0;">
+                            <select name="tier" onchange="this.form.submit()" style="padding: 5px; background: #0B0F19; color: {% if user.rank == 'Platinum' %}#E5E4E2{% elif user.rank == 'Gold' %}#F5B942{% elif user.rank == 'Silver' %}#C0C0C0{% else %}#CD7F32{% endif %}; border: 1px solid #3FA9F5; border-radius: 4px; font-weight: bold; cursor: pointer;">
+                                <option value="Bronze" {% if user.rank == 'Bronze' %}selected{% endif %}>Bronze</option>
+                                <option value="Silver" {% if user.rank == 'Silver' %}selected{% endif %}>Silver</option>
+                                <option value="Gold" {% if user.rank == 'Gold' %}selected{% endif %}>Gold</option>
+                                <option value="Platinum" {% if user.rank == 'Platinum' %}selected{% endif %}>Platinum</option>
+                            </select>
+                        </form>
+                    </td>
                     <td style="padding: 12px;">
                         {% if user.is_active %}
                             <span style="color: #2ED9A5;">Active</span>
