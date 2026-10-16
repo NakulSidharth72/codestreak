@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeStreak | Auth</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --near-black: #0B0F19;
+            --deep-emerald: #0D3A35;
+            --emerald-glow: #1A5C53;
+            --pearl-white: #F4F0E9;
+            --champagne: #E3C69C;
+            --off-white: #E8EBF2;
+            --danger: #FF6B6B;
+            --success: #2ED9A5;
+        }
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            background: var(--near-black); 
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* ================= 200VW SLIDER ================= */
+        .slider {
+            display: flex;
+            width: 200vw;
+            height: 100vh;
+            transition: transform 0.9s cubic-bezier(0.77, 0, 0.175, 1);
+        }
+        .slider.signup {
+            transform: translateX(-100vw);
+        }
+
+        /* ================= EACH SLIDE (100VW) ================= */
+        .slide {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background: var(--deep-emerald);
+        }
+
+        /* ================= EMERALD INFO PANEL (Background layer) ================= */
+        .info-panel {
+            position: absolute;
+            top: 0;
+            height: 100vh;
+            width: 55vw; /* Wider background to ensure no gaps */
+            background: linear-gradient(135deg, #0D3A35 0%, #061A18 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: var(--pearl-white);
+            text-align: center;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .info-panel::before {
+            content: '';
+            position: absolute;
+            top: -30%; right: -30%; width: 80%; height: 80%;
+            background: radial-gradient(circle, rgba(46, 217, 165, 0.15) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+        .info-panel::after {
+            content: '';
+            position: absolute;
+            bottom: -30%; left: -30%; width: 80%; height: 80%;
+            background: radial-gradient(circle, rgba(227, 198, 156, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        /* ================= BEIGE FORM PANEL (Foreground layer) ================= */
+        .form-panel {
+            position: absolute;
+            top: 0;
+            height: 100vh;
+            width: 55vw; /* Reduced width to bring green closer */
+            background: var(--pearl-white);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            z-index: 2;
+            overflow-y: auto;
+        }
+
+        /* --- Slide 1 (Login) Positioning --- */
+        /* Form on left, emerald on right. Diagonal cuts from center-top to right-bottom. */
+        .slide:nth-child(1) .form-panel {
+            left: 0;
+            /* Top right at 85% (47vw). Bottom right at 100% (55vw). Green comes very close to center. */
+            clip-path: polygon(0 0, 85% 0, 100% 100%, 0% 100%);
+            padding: 40px 5% 40px 5%; /* Even padding, margins will position the form */
+        }
+        .slide:nth-child(1) .info-panel {
+            right: 0;
+        }
+
+        /* --- Slide 2 (Register) Positioning --- */
+        /* Emerald on left, form on right. Diagonal cuts from left-top to center-bottom. */
+        .slide:nth-child(2) .info-panel {
+            left: 0;
+        }
+        .slide:nth-child(2) .form-panel {
+            right: 0;
+            /* Top left at 0%. Bottom left at 15% (8vw). Green comes close to center. */
+            clip-path: polygon(0% 0, 100% 0, 100% 100%, 15% 100%);
+            padding: 40px 5% 40px 5%;
+        }
+
+        /* ================= FORM STYLING ================= */
+        h2 { 
+            font-family: 'Playfair Display', serif; 
+            color: var(--deep-emerald); 
+            margin-bottom: 25px; 
+            font-size: 2.2rem; 
+            width: 100%;
+            max-width: 400px;
+        }
+        .input-group { margin-bottom: 15px; position: relative; width: 100%; max-width: 400px; }
+        .input-group label { 
+            display: block; 
+            font-size: 0.8rem; 
+            color: #6B7280; 
+            margin-bottom: 5px; 
+            font-weight: 600; 
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #D1D5DB;
+            border-radius: 8px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.9rem;
+            background: #FFFFFF;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        .input-group input:focus, .input-group select:focus {
+            border-color: var(--emerald-glow);
+            box-shadow: 0 0 0 4px rgba(13, 58, 53, 0.1);
+        }
+        
+        .password-wrapper { position: relative; display: flex; align-items: center; width: 100%; }
+        .password-wrapper input { padding-right: 45px !important; }
+        .toggle-password { 
+            position: absolute; right: 15px; cursor: pointer; font-size: 1.1rem; 
+            user-select: none; opacity: 0.5; transition: 0.2s; z-index: 5;
+        }
+        .toggle-password:hover { opacity: 1; }
+
+        .btn-auth {
+            width: 100%; max-width: 400px; padding: 14px;
+            background: var(--deep-emerald); color: var(--pearl-white);
+            border: none; border-radius: 8px; font-size: 1rem; font-weight: 600;
+            cursor: pointer; transition: all 0.3s ease; margin-top: 10px;
+            font-family: 'Poppins', sans-serif; letter-spacing: 0.5px;
+        }
+        .btn-auth:hover { 
+            background: #0A2E2A; transform: translateY(-2px); 
+            box-shadow: 0 10px 20px rgba(13, 58, 53, 0.3);
+        }
+
+        .switch-link {
+            text-align: center; margin-top: 20px; font-size: 0.85rem;
+            color: #6B7280; max-width: 400px; width: 100%;
+        }
+        .switch-link a {
+            color: var(--emerald-glow); font-weight: 700;
+            text-decoration: none; cursor: pointer; transition: 0.2s;
+        }
+        .switch-link a:hover { text-decoration: underline; color: var(--deep-emerald); }
+
+        /* ================= INFO PANEL CONTENT STYLING ================= */
+        .info-content {
+            width: 100%; max-width: 380px; z-index: 5; padding: 20px; position: relative;
+        }
+        /* Shift info content away from the diagonal overlap */
+        .slide:nth-child(1) .info-content { margin-left: 10vw; } /* Push right */
+        .slide:nth-child(2) .info-content { margin-right: 10vw; } /* Push left */
+
+        .info-content h2 { 
+            color: var(--pearl-white); font-size: 3rem; 
+            margin-bottom: 15px; line-height: 1.2;
+        }
+        .info-content p { 
+            color: var(--off-white); font-size: 1rem; 
+            line-height: 1.7; opacity: 0.8; margin-bottom: 30px;
+        }
+        .info-content .btn-switch {
+            padding: 12px 35px; background: transparent;
+            border: 2px solid var(--champagne); color: var(--champagne);
+            border-radius: 8px; font-weight: 600; font-size: 0.95rem;
+            cursor: pointer; transition: all 0.3s ease; font-family: 'Poppins', sans-serif;
+        }
+        .info-content .btn-switch:hover {
+            background: var(--champagne); color: var(--deep-emerald);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(227, 198, 156, 0.3);
+        }
+
+        /* ================= FLASH MESSAGES ================= */
+        .auth-flash-container { 
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%); 
+            z-index: 1000; width: 80%; text-align: center; pointer-events: none;
+        }
+        .auth-flash { 
+            padding: 12px 20px; border-radius: 8px; font-weight: 600; 
+            font-size: 0.85rem; margin-bottom: 10px; 
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 0.4s ease; pointer-events: auto; display: inline-block;
+        }
+        .auth-flash.danger { background: var(--danger); color: #fff; }
+        .auth-flash.success { background: var(--success); color: var(--near-black); }
+        .auth-flash.info { background: var(--emerald-glow); color: #fff; }
+
+        /* ================= CLOSE AUTH BUTTON ================= */
+        .close-auth {
+            position: fixed;
+            top: 25px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--deep-emerald); /* Solid emerald background */
+            border: 2px solid var(--champagne); /* Champagne border for contrast */
+            color: var(--champagne); /* Champagne 'X' icon */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.8rem;
+            line-height: 1;
+            text-decoration: none;
+            z-index: 9999;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(13, 58, 53, 0.4); /* Soft shadow for depth */
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+        }
+        .close-auth:hover {
+            background: var(--champagne); /* Inverts to champagne on hover */
+            color: var(--deep-emerald); /* Emerald 'X' on hover */
+            border-color: var(--champagne);
+            transform: scale(1.1) rotate(90deg);
+            box-shadow: 0 0 25px rgba(227, 198, 156, 0.6);
+        }
+
+        /* ================= RESPONSIVE ================= */
+        @media (max-width: 1000px) {
+            .form-panel { width: 100vw; clip-path: none; padding: 40px 20px; }
+            .info-panel { display: none; } 
+        }
+    </style>
+</head>
+<body>
+    <!-- Close Auth Button -->
+    <a href="{% if session.get('user_id') %}{{ url_for('dashboard') }}{% else %}{{ url_for('landing') }}{% endif %}" class="close-auth" title="Close">
+        &times;
+    </a>
+
+    <div class="slider" id="slider">
+        <!-- ... rest of your existing code ... -->
+    <div class="slider" id="slider">
+        
+        <!-- ================= SLIDE 1: LOGIN ================= -->
+        <div class="slide">
+            <div class="info-panel">
+                <div class="info-content">
+                    <h2>Welcome<br>back.</h2>
+                    <p>Your boards, your drafts, and your people are exactly where you left them.</p>
+                    <button class="btn-switch" onclick="switchForm('signup')">Create account</button>
+                </div>
+            </div>
+            <div class="form-panel">
+                <!-- Pushed right to sit near the diagonal -->
+                <div style="width: 100%; max-width: 400px; margin-left: auto; margin-right: 10%;">
+                    <h2>Sign in</h2>
+                    <form method="POST" action="{{ url_for('login') }}">
+                        <div class="input-group">
+                            <label>Username or Email</label>
+                            <input type="text" name="username" placeholder="Enter your username" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Password</label>
+                            <div class="password-wrapper">
+                                <input type="password" name="password" id="loginPassword" placeholder="Enter your password" required>
+                                <span class="toggle-password" onclick="togglePassword('loginPassword', this)">👁️</span>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-auth">Sign in</button>
+                    </form>
+                    <div class="switch-link">
+                        New to CodeStreak? <a onclick="switchForm('signup')">Create an account</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= SLIDE 2: REGISTER ================= -->
+        <div class="slide">
+            <div class="info-panel">
+                <div class="info-content">
+                    <h2>Start the<br>first page.</h2>
+                    <p>One account for every board, every draft, and every device you own.</p>
+                    <button class="btn-switch" onclick="switchForm('login')">Sign in</button>
+                </div>
+            </div>
+            <div class="form-panel">
+                <!-- Pushed left to sit near the diagonal -->
+                <div style="width: 100%; max-width: 400px; margin-right: auto; margin-left: 10%;">
+                    <h2>Create account</h2>
+                    <form method="POST" action="{{ url_for('register') }}">
+                        <div class="input-group">
+                            <label>Username</label>
+                            <input type="text" name="username" placeholder="Choose a username" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Email</label>
+                            <input type="email" name="email" placeholder="Enter your email" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Password</label>
+                            <div class="password-wrapper">
+                                <input type="password" name="password" id="registerPassword" placeholder="Create a password" required>
+                                <span class="toggle-password" onclick="togglePassword('registerPassword', this)">👁️</span>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Security Question</label>
+                            <select name="security_question" required>
+                                <option value="What is your pet's name?">What is your pet's name?</option>
+                                <option value="What is your mother's maiden name?">What is your mother's maiden name?</option>
+                                <option value="What city were you born in?">What city were you born in?</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Security Answer</label>
+                            <input type="text" name="security_answer" placeholder="Your answer" required>
+                        </div>
+                        <button type="submit" class="btn-auth">Create account</button>
+                    </form>
+                    <div class="switch-link">
+                        Already have an account? <a onclick="switchForm('login')">Sign in</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="auth-flash-container">
+                {% for category, message in messages %}
+                    <div class="auth-flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <script>
+        function switchForm(type) {
+            const slider = document.getElementById('slider');
+            const flashContainer = document.querySelector('.auth-flash-container');
+            if (flashContainer) flashContainer.style.display = 'none';
+
+            if (type === 'signup') {
+                slider.classList.add('signup');
+            } else {
+                slider.classList.remove('signup');
+            }
+        }
+
+        function togglePassword(inputId, iconElement) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                iconElement.textContent = '🙈';
+            } else {
+                input.type = 'password';
+                iconElement.textContent = '👁️';
+            }
+        }
+    </script>
+</body>
+</html>

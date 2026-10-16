@@ -272,7 +272,7 @@ def register():
         finally:
             cur.close()
             conn.close()
-    return render_template('register.html')
+    return render_template('auth.html')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -295,7 +295,7 @@ def login():
             return redirect(url_for('dashboard'))
         else:
             flash('Invalid username or password', 'danger')
-    return render_template('login.html')
+    return render_template('auth.html')
 
 @app.route('/dashboard')
 def dashboard():
