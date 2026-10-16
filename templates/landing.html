@@ -2,24 +2,7 @@
 {% block content %}
 
 <!-- ================= GLOW CURSOR (Landing Page Only) ================= -->
-<div class="cursor-glow" id="cursorGlow"></div>
-
-<style>
-    .cursor-glow {
-        position: fixed;
-        width: 500px;
-        height: 500px;
-        border-radius: 50%;
-        background: radial-gradient(circle, rgba(245, 185, 66, 0.1) 0%, rgba(63, 169, 245, 0.05) 40%, transparent 70%);
-        pointer-events: none;
-        z-index: 9998;
-        transform: translate(-50%, -50%);
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
-    .cursor-glow.active { opacity: 1; }
-</style>
-
+ 
 <style>
     :root {
         --near-black: #0B0F19;
@@ -1141,18 +1124,6 @@ document.addEventListener('DOMContentLoaded', function() {
     updateParallax();
 })();
 // ================= GLOW CURSOR =================
-(function() {
-    const glow = document.getElementById('cursorGlow');
-    if (!glow) return;
-    document.addEventListener('pointermove', function(e) {
-        glow.style.left = e.clientX + 'px';
-        glow.style.top = e.clientY + 'px';
-        glow.classList.add('active');
-    });
-    document.addEventListener('mouseleave', function() {
-        glow.classList.remove('active');
-    });
-})();
 
 // ================= SCROLL REVEAL (Final version) =================
 window.addEventListener('load', function() {

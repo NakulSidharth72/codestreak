@@ -307,7 +307,7 @@
             background: linear-gradient(135deg, var(--amber-gold), #F5893D);
             border: none;
             cursor: pointer;
-            -index: 999;
+            z-index: 999;
             box-shadow: 0 0 25px rgba(245, 185, 66, 0.5), 0 10px 30px rgba(0, 0, 0, 0.4);
             transition: transform 0.3s, box-shadow 0.3s;
             display: flex;
@@ -387,7 +387,7 @@
             border-radius: 16px;
             font-size: 0.9rem;
             line-height: 1.5;
-            -space: pre-wrap;
+            white-space: pre-wrap;
             word-wrap: break-word;
         }
         .ai-msg-user .ai-bubble {
@@ -460,7 +460,7 @@
             background: var(--amber-gold);
             color: var(--near-black);
             border: none;
-            -weight: 700;
+            font-weight: 700;
             font-size: 1.1rem;
             cursor: pointer;
             transition: 0.3s;
@@ -604,65 +604,124 @@
             }
         });
     </script>
-<!-- Toast Container -->
-<div class="toast-container" id="toastContainer"></div>
-</body>
-<script>
-    // ================= TOAST NOTIFICATION SYSTEM =================
-    window.showToast = function(title, message, icon = '⚡') {
-        const container = document.getElementById('toastContainer');
-        if (!container) return;
 
-        const toast = document.createElement('div');
-        toast.className = 'toast';
-        toast.innerHTML = `
-            <div class="toast-icon">${icon}</div>
-            <div class="toast-content">
-                <div class="toast-title">${title}</div>
-                <div class="toast-message">${message}</div>
-            </div>
-            <button class="toast-close" onclick="this.parentElement.remove()">×</button>
-        `;
-        container.appendChild(toast);
+        <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
 
-        // Trigger slide-in
-        setTimeout(() => toast.classList.add('show'), 50);
-
-        // Auto-dismiss after 4 seconds
-        setTimeout(() => {
-            toast.classList.remove('show');
-            setTimeout(() => toast.remove(), 500);
-        }, 4000);
-    };
-
-    // Auto-trigger flash messages as toasts
-    document.addEventListener('DOMContentLoaded', () => {
-        const flashMessages = document.querySelectorAll('.flash');
-        flashMessages.forEach((flash, index) => {
-            let icon = '⚡';
-            let title = 'Notice';
-            
-            if (flash.classList.contains('success')) {
-                icon = '🎉';
-                title = 'Success!';
-            } else if (flash.classList.contains('danger')) {
-                icon = '⚠️';
-                title = 'Error';
-            } else if (flash.classList.contains('info')) {
-                icon = 'ℹ️';
-                title = 'Info';
+    <!-- ================= CURSOR MECHANICAL TRAIL CSS ================= -->
+    <style>
+        .cursor-particle {
+            position: fixed;
+            pointer-events: none;
+            z-index: 99999;
+            transform: translate(-50%, -50%); 
+            opacity: 1;
+            animation: particleFade 2s ease-out forwards;
+            will-change: transform, opacity;
+        }
+        @keyframes particleFade {
+            0% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1) rotate(0deg);
             }
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.3) translateY(30px) rotate(45deg);
+            }
+        }
+    </style>
 
-            const message = flash.textContent.trim();
+    <!-- ================= CURSOR MECHANICAL TRAIL JS ================= -->
+    <script>
+        (function() {
+            const icons = ['⚙️', '🔩', '🛠️', '💻', '⌨️', '🔌', '🏎', '📟']; 
+            let lastX = 0, lastY = 0;
+            let particleCount = 0;
+            const MAX_PARTICLES = 25;
 
-            // Show as toast with a small delay for stacking
+            document.addEventListener('mousemove', (e) => {
+                const distance = Math.hypot(e.clientX - lastX, e.clientY - lastY);
+                if (distance < 20) return; 
+                
+                lastX = e.clientX;
+                lastY = e.clientY;
+
+                if (particleCount >= MAX_PARTICLES) return;
+                particleCount++;
+
+                const particle = document.createElement('div');
+                particle.className = 'cursor-particle';
+                
+                const icon = icons[Math.floor(Math.random() * icons.length)];
+                particle.textContent = icon;
+                
+                const size = Math.random() * 15 + 24; 
+                particle.style.fontSize = `${size}px`;
+                
+                particle.style.left = `${e.clientX}px`;
+                particle.style.top = `${e.clientY}px`;
+                
+                document.body.appendChild(particle);
+
+                setTimeout(() => {
+                    particle.remove();
+                    particleCount--;
+                }, 1000);
+            });
+        })();
+    </script>
+
+    <!-- ================= TOAST NOTIFICATION SYSTEM ================= -->
+    <script>
+        window.showToast = function(title, message, icon = '⚡') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerHTML = `
+                <div class="toast-icon">${icon}</div>
+                <div class="toast-content">
+                    <div class="toast-title">${title}</div>
+                    <div class="toast-message">${message}</div>
+                </div>
+                <button class="toast-close" onclick="this.parentElement.remove()">×</button>
+            `;
+            container.appendChild(toast);
+
+            setTimeout(() => toast.classList.add('show'), 50);
             setTimeout(() => {
-                window.showToast(title, message, icon);
-            }, index * 200);
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 500);
+            }, 4000);
+        };
 
-            // Hide the original flash
-            flash.style.display = 'none';
+        document.addEventListener('DOMContentLoaded', () => {
+            const flashMessages = document.querySelectorAll('.flash');
+            flashMessages.forEach((flash, index) => {
+                let icon = '⚡';
+                let title = 'Notice';
+                
+                if (flash.classList.contains('success')) {
+                    icon = '🎉';
+                    title = 'Success!';
+                } else if (flash.classList.contains('danger')) {
+                    icon = '⚠️';
+                    title = 'Error';
+                } else if (flash.classList.contains('info')) {
+                    icon = 'ℹ️';
+                    title = 'Info';
+                }
+
+                const message = flash.textContent.trim();
+
+                setTimeout(() => {
+                    window.showToast(title, message, icon);
+                }, index * 200);
+
+                flash.style.display = 'none';
+            });
         });
-    });
-</script>
+    </script>
+</body>
 </html>
