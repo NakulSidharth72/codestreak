@@ -4,3 +4,4 @@ Werkzeug
 razorpay
 python-dotenv
 groq
+pip install mysql-connector-python

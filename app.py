@@ -6,6 +6,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import razorpay
 from datetime import date
 import os
+import sqlite3
+import mysql.connector
 from werkzeug.utils import secure_filename
 from groq import Groq
 
@@ -30,10 +32,66 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+# --- UNIVERSAL DATABASE WRAPPER ---
+class MySQLCursorWrapper:
+    """Translates SQLite '?' placeholders to MySQL '%s' and handles rows."""
+    def __init__(self, cursor):
+        self.cursor = cursor
+
+    def execute(self, query, params=()):
+        # Replace ? with %s for MySQL
+        mysql_query = query.replace('?', '%s')
+        self.cursor.execute(mysql_query, params)
+        return self
+
+    def fetchone(self):
+        return self.cursor.fetchone()
+
+    def fetchall(self):
+        return self.cursor.fetchall()
+
+    def close(self):
+        self.cursor.close()
+        
+    @property
+    def lastrowid(self):
+        return self.cursor.lastrowid
+
+class DBConnectionWrapper:
+    def __init__(self, conn, is_mysql=False):
+        self.conn = conn
+        self.is_mysql = is_mysql
+
+    def cursor(self):
+        if self.is_mysql:
+            # dictionary=True makes MySQL return rows like SQLite's row_factory
+            return MySQLCursorWrapper(self.conn.cursor(dictionary=True))
+        return self.conn.cursor()
+
+    def commit(self):
+        self.conn.commit()
+
+    def rollback(self):
+        self.conn.rollback()
+
+    def close(self):
+        self.conn.close()
+
 def get_db():
-    conn = sqlite3.connect(DATABASE, detect_types=sqlite3.PARSE_DECLTYPES)
-    conn.row_factory = sqlite3.Row
-    return conn
+    # 1. Check if we are on Render (Cloud)
+    if os.environ.get('DB_HOST'):
+        conn = mysql.connector.connect(
+            host=os.environ.get('DB_HOST'),
+            user=os.environ.get('DB_USER'),
+            password=os.environ.get('DB_PASSWORD'),
+            database=os.environ.get('DB_NAME')
+        )
+        return DBConnectionWrapper(conn, is_mysql=True)
+    else:
+        # 2. We are locally on Nakul's computer!
+        conn = sqlite3.connect('codestreak.db', detect_types=sqlite3.PARSE_DECLTYPES)
+        conn.row_factory = sqlite3.Row
+        return DBConnectionWrapper(conn, is_mysql=False)
 
 import json
 
