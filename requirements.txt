@@ -4,4 +4,4 @@ Werkzeug
 razorpay
 python-dotenv
 groq
-mysql-connector-python
+    
