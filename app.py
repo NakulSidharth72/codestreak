@@ -7,7 +7,6 @@ import razorpay
 from datetime import date
 import os
 import sqlite3
-import mysql.connector
 from werkzeug.utils import secure_filename
 from groq import Groq
 
