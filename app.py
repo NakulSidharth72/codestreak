@@ -330,7 +330,7 @@ def register():
         finally:
             cur.close()
             conn.close()
-    return render_template('auth.html')
+    return render_template('auth.html', mode='register')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -353,7 +353,7 @@ def login():
             return redirect(url_for('dashboard'))
         else:
             flash('Invalid username or password', 'danger')
-    return render_template('auth.html')
+    return render_template('auth.html', mode='login')
 
 @app.route('/dashboard')
 def dashboard():
@@ -803,7 +803,6 @@ def logout():
 def forgot_password():
     if request.method == 'POST':
         email = request.form['email']
-        
         conn = get_db()
         cur = conn.cursor()
         cur.execute("SELECT * FROM users WHERE email = ?", (email,))
@@ -838,6 +837,11 @@ def security_question():
     
     if not user:
         flash('User not found.', 'danger')
+        return redirect(url_for('forgot_password'))
+    
+     # Safety check: what if user has no security question?
+    if not user['security_question'] or not user['security_answer']:
+        flash('This account does not have a security question set up. Please contact admin.', 'danger')
         return redirect(url_for('forgot_password'))
     
     if request.method == 'POST':

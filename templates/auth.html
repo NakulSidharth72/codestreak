@@ -278,14 +278,12 @@
 </head>
 <body>
     <!-- Close Auth Button -->
-    <a href="{% if session.get('user_id') %}{{ url_for('dashboard') }}{% else %}{{ url_for('landing') }}{% endif %}" class="close-auth" title="Close">
+    <a href="{% if session.get('user_id') %}{{ url_for('dashboard') }}{% else %}{{ url_for('landing') }}{% endif %}" class="close-auth {% if mode == 'register' %}register-mode{% endif %}" title="Close">
         &times;
     </a>
 
-    <div class="slider" id="slider">
-        <!-- ... rest of your existing code ... -->
-    <div class="slider" id="slider">
-        
+    <div class="slider {% if mode == 'register' %}signup{% endif %}" id="slider">
+
         <!-- ================= SLIDE 1: LOGIN ================= -->
         <div class="slide">
             <div class="info-panel">
@@ -310,6 +308,9 @@
                                 <input type="password" name="password" id="loginPassword" placeholder="Enter your password" required>
                                 <span class="toggle-password" onclick="togglePassword('loginPassword', this)">👁️</span>
                             </div>
+                        </div>
+                        <div style="text-align: right; width: 100%; max-width: 400px; margin-bottom: 15px;">
+                            <a href="{{ url_for('forgot_password') }}" style="color: var(--emerald-glow); font-size: 0.85rem; text-decoration: none; font-weight: 600;">Forgot Password?</a>
                         </div>
                         <button type="submit" class="btn-auth">Sign in</button>
                     </form>
