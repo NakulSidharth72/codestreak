@@ -295,7 +295,17 @@ def login():
             session['user_id'] = user['id']
             session['username'] = user['username']
             session['is_admin'] = user['is_admin']
+            conn = get_db()
+            cur = conn.cursor()
+            # Update last active time
+            cur.execute("UPDATE users SET last_active = CURRENT_TIMESTAMP WHERE id = ?", (user['id'],))
+            # Log the login activity for the heatmap calendar
+            cur.execute("INSERT INTO activity (user_id, action, description) VALUES (?, 'login', 'Logged in')", (user['id'],))
+            conn.commit()
+            cur.close()
+            conn.close()
             flash('Login successful!', 'success')
+            log_activity(user['id'], 'login', 'Logged into the platform')
             return redirect(url_for('dashboard'))
         else:
             flash('Invalid username or password', 'danger')
@@ -518,13 +528,13 @@ def profile():
     """, (session['user_id'],))
     recent_activity = cur.fetchall()
     
-    # Streak calendar (last 30 days)
+    # Streak calendar (last 30 days) - Now tracking ALL activity (logins + lessons)
     cur.execute("""
-        SELECT DATE(completed_at) as day
-        FROM progress
-        WHERE user_id = ? AND status = 'completed'
-        AND completed_at >= datetime('now', '-30 days')
-        GROUP BY DATE(completed_at)
+        SELECT DATE(created_at) as day
+        FROM activity
+        WHERE user_id = ? 
+        AND created_at >= datetime('now', '-30 days')
+        GROUP BY DATE(created_at)
     """, (session['user_id'],))
     active_days = [str(row['day'])[:10] for row in cur.fetchall()]
     
