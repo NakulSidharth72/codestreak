@@ -466,7 +466,7 @@ def ai_chat():
                 {"role": "user", "content": user_message}
             ],
             model="llama-3.3-70b-versatile",
-            temperature=0.7,
+            temperature=0.3,
             max_tokens=300,
         )
         
